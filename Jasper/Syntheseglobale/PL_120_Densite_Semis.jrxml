@@ -1,0 +1,747 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.2.0  -->
+<!-- 2017-11-15T16:28:54 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PL_Globale_DensiteSemis" language="groovy" pageWidth="802" pageHeight="515" orientation="Landscape" columnWidth="802" leftMargin="0" rightMargin="0" topMargin="30" bottomMargin="0" uuid="bfac3ceb-6ce0-4b51-8743-909488a475c1">
+	<property name="ireport.zoom" value="1.0263162364614133"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.jasperserver.url" value="http://172.24.12.203:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.user" value="jasperadmin"/>
+	<property name="ireport.jasperserver.report.resource" value="/rapports_PL/analyses/PL_120_Densite_Semis"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="BDSOLDWH TEST"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<template><![CDATA["repo:/styles/PL_style_rapports"]]></template>
+	<subDataset name="Date et densité de semis" uuid="425cd869-47ad-491b-a703-295fac5dc7b7">
+		<parameter name="p_millesime" class="java.lang.Integer">
+			<defaultValueExpression><![CDATA[2013]]></defaultValueExpression>
+		</parameter>
+		<parameter name="schema_bdaplat_name" class="java.lang.String">
+			<defaultValueExpression><![CDATA["public"]]></defaultValueExpression>
+		</parameter>
+		<parameter name="LoggedInUserName" class="java.lang.String"/>
+		<parameter name="sub_culture" class="java.lang.String">
+			<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+		</parameter>
+		<parameter name="P_culturesBioEtConv" class="java.lang.Integer" isForPrompting="false">
+			<defaultValueExpression><![CDATA[1]]></defaultValueExpression>
+		</parameter>
+		<queryString>
+			<![CDATA[SELECT	*,
+	CASE WHEN date_semis LIKE 'avant' THEN 1
+		WHEN date_semis LIKE 'après' THEN 3
+		ELSE 2
+	END AS ordre
+FROM (
+	-- sous-requete req
+	SELECT
+		millesime,
+		culture,
+		idtypeculture,
+		date_semis,
+		ROUND((SUM(qte_recolte)/SUM(surface))::numeric,1) AS rdt_moy,
+		ROUND((AVG(qte_semis)/AVG(surface))::numeric,1) AS densite_semis
+
+	FROM (
+	-- sous-selection pour les rendements vérifiés : req_verif
+		SELECT
+			parc.iep_ilo_millesime AS millesime,
+			t1.libelletypeculture AS culture,
+			t1.idtypeculture,
+			(parc.iep_par_rdtmoy * parc.iep_par_surf) AS qte_recolte,
+		-- verification du semis
+		CASE
+			WHEN t2.date_semis < (SELECT EXTRACT(WEEK FROM date_min) FROM bdanalysegroupe.moduleverif_plage_dates td
+				WHERE (td.iddepartement=t1.identite AND td.idculture=parc.iep_par_cultid AND td.type_interv='semis') LIMIT 1)
+			THEN 'avant'
+			WHEN t2.date_semis BETWEEN (SELECT EXTRACT(WEEK FROM date_min) FROM bdanalysegroupe.moduleverif_plage_dates td
+					WHERE (td.iddepartement=t1.identite AND td.idculture=parc.iep_par_cultid AND td.type_interv='semis') LIMIT 1)
+				AND (SELECT EXTRACT(WEEK FROM date_max) FROM bdanalysegroupe.moduleverif_plage_dates td
+					WHERE (td.iddepartement=t1.identite AND td.idculture=parc.iep_par_cultid AND td.type_interv='semis') LIMIT 1)
+			THEN CAST(t2.date_semis AS text)
+			WHEN t2.date_semis > (SELECT EXTRACT(WEEK FROM date_max) FROM bdanalysegroupe.moduleverif_plage_dates td
+					WHERE (td.iddepartement=t1.identite AND td.idculture=parc.iep_par_cultid AND td.type_interv='semis') LIMIT 1)
+			THEN 'après'
+		ELSE NULL
+		END AS date_semis,
+		parc.iep_par_surf AS surface,
+		eve_qtetot AS qte_semis
+
+		FROM	bdaplat.parcelles_$P!{p_millesime} parc
+			-- jointure sur la table des exploitations pour exp_statut et exp_depid
+		JOIN	bdaplat.texploitations te ON (te.idexploitation = parc.iep_idexploitation)
+			-- jointure sur les types de cultures
+		LEFT JOIN (
+			SELECT	tcpt.*,ttc.codetypeculture,ttc.libelletypeculture,tu.identite FROM
+				bdanalysegroupe.cultures_par_type tcpt
+			JOIN	bdanalysegroupe.type_culture ttc ON (ttc.idtypeculture=tcpt.idtypeculture)
+			JOIN	bdanalysegroupe.tutilisateurs tu ON (tcpt.iddepartement=tu.identite)
+		WHERE
+			SUBSTRING(ttc.codetypeculture FROM 1 FOR 3) LIKE 'PL_'
+			AND	tu.login=$P{LoggedInUserName}
+		) t1 ON (t1.idculture=parc.iep_par_cultid)
+			-- jointure sur les interventions de type semis
+		LEFT JOIN (
+			SELECT	idparcelleculturale, eve_millesime,
+			MIN(EXTRACT(WEEK FROM eve_debut)) AS date_semis, eve_qtetot
+			FROM	bdaplat.interventions_$P!{p_millesime}
+			--critere sur les interventions semis plantation realisees sauf cipan
+			WHERE	eve_intervregroupid=9 AND eve_etat=1 AND eve_typeid<>235
+			AND	eve_millesime=$P{p_millesime}
+			GROUP BY eve_millesime, idparcelleculturale, eve_qtetot
+		) t2 ON (parc.iep_idparcelleculturale=t2.idparcelleculturale AND parc.iep_ilo_millesime=t2.eve_millesime)
+
+		WHERE
+			-- critere sur les exploitations reelles
+			te.exp_statut IS NULL
+			-- critere departement
+		AND	te.exp_depid= (SELECT identite FROM	bdanalysegroupe.tutilisateurs WHERE login=$P{LoggedInUserName})
+			-- critere sur le millesime
+		AND	parc.iep_ilo_millesime=$P{p_millesime}
+	AND 	(parc.iep_par_bio =
+(case when $P{P_culturesBioEtConv} =1 then false when $P{P_culturesBioEtConv} = 2 then true when $P{P_culturesBioEtConv} =3 then true end)
+OR 	parc.iep_par_bio =
+(case when $P{P_culturesBioEtConv} =1 then false when $P{P_culturesBioEtConv} = 2 then true when $P{P_culturesBioEtConv} =3 then false end))
+			-- critere sur les cultures selectionnees
+		AND	t1.libelletypeculture = $P{sub_culture}
+			-- critere rdt valide
+		AND	parc.iep_par_rdtmoy BETWEEN 5
+		AND	(SELECT tv.valeur_max FROM bdanalysegroupe.moduleverif_plage_valeurs tv WHERE tv.iddepartement=t1.identite AND tv.idculture=parc.iep_par_cultid AND tv.type_critere='iep_par_rdtmoy')
+		-- critere date de semis renseignee
+		AND	t2.date_semis IS NOT NULL
+		) req_verif
+
+WHERE
+	-- critere rdt non null
+	qte_recolte IS NOT NULL
+	-- critere surface >0
+AND	surface > 0
+	-- critere date de semis renseignee
+AND	date_semis IS NOT NULL
+
+
+GROUP BY millesime,culture, idtypeculture, date_semis
+) req
+ORDER BY millesime, culture, ordre, date_semis]]>
+		</queryString>
+		<field name="millesime" class="java.lang.Integer"/>
+		<field name="culture" class="java.lang.String"/>
+		<field name="idtypeculture" class="java.lang.Integer"/>
+		<field name="date_semis" class="java.lang.String"/>
+		<field name="rdt_moy" class="java.math.BigDecimal"/>
+		<field name="densite_semis" class="java.math.BigDecimal"/>
+		<field name="ordre" class="java.lang.Integer"/>
+		<variable name="max_densite" class="java.lang.Double" resetType="Group" resetGroup="gr_culture" calculation="Highest">
+			<variableExpression><![CDATA[$F{densite_semis}]]></variableExpression>
+		</variable>
+		<group name="gr_culture">
+			<groupExpression><![CDATA[$F{culture}]]></groupExpression>
+		</group>
+	</subDataset>
+	<subDataset name="Surfaces et densité de semis" uuid="61aaa261-fe45-4e83-9356-2cb1e987c2d1">
+		<parameter name="p_millesime" class="java.lang.Integer">
+			<defaultValueExpression><![CDATA[2013]]></defaultValueExpression>
+		</parameter>
+		<parameter name="schema_bdaplat_name" class="java.lang.String">
+			<defaultValueExpression><![CDATA["public"]]></defaultValueExpression>
+		</parameter>
+		<parameter name="LoggedInUserName" class="java.lang.String"/>
+		<parameter name="sub_culture" class="java.lang.String">
+			<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+		</parameter>
+		<parameter name="P_culturesBioEtConv" class="java.lang.Integer" isForPrompting="false">
+			<defaultValueExpression><![CDATA[1]]></defaultValueExpression>
+		</parameter>
+		<queryString>
+			<![CDATA[SELECT classes, ROUND(((100*sum_surf)/surf_tot)::numeric,1) AS pourcentages, culture
+FROM(
+SELECT	millesime, culture, idtypeculture, classes,
+	sum_surf,
+	SUM(sum_surf) OVER(PARTITION BY culture) AS surf_tot,
+	AVG(densite_semis) OVER(PARTITION BY classes) AS densite_semis_classes
+FROM (
+	-- sous-requete req
+	SELECT
+		millesime,
+		culture,
+		idtypeculture,
+		CASE
+			WHEN (qte_semis/surface > 0 AND qte_semis/surface < 80)
+				THEN '1#<80'
+			WHEN (qte_semis/surface BETWEEN 80 AND 90)
+				THEN '2#80-90'
+			WHEN (qte_semis/surface BETWEEN 90 AND 100)
+				THEN '3#90-100'
+			WHEN (qte_semis/surface BETWEEN 100 AND 110)
+				THEN '4#100-110'
+			WHEN (qte_semis/surface BETWEEN 110 AND 120)
+				THEN '5#110-120'
+			WHEN (qte_semis/surface BETWEEN 120 AND 130)
+				THEN '6#120-130'
+			WHEN (qte_semis/surface BETWEEN 130 AND 140)
+				THEN '7#130-140'
+			WHEN (qte_semis/surface BETWEEN 140 AND 150)
+				THEN '8#140-150'
+			WHEN (qte_semis/surface >150)
+				THEN '9#>150'
+		END AS classes,
+		(AVG(qte_semis)/AVG(surface)) AS densite_semis,
+		SUM(surface) AS sum_surf
+
+	FROM (
+	-- sous-selection pour les rendements vérifiés : req_verif
+		SELECT
+			parc.iep_ilo_millesime AS millesime,
+			t1.libelletypeculture AS culture,
+			t1.idtypeculture,
+			eve_qtetot AS qte_semis,
+			parc.iep_par_surf AS surface
+
+		FROM	bdaplat.parcelles_$P!{p_millesime} parc
+			-- jointure sur la table des exploitations pour exp_statut et exp_depid
+		JOIN	bdaplat.texploitations te ON (te.idexploitation = parc.iep_idexploitation)
+			-- jointure sur les types de cultures
+		LEFT JOIN (
+			SELECT	tcpt.*,ttc.codetypeculture,ttc.libelletypeculture,tu.identite FROM
+				bdanalysegroupe.cultures_par_type tcpt
+			JOIN	bdanalysegroupe.type_culture ttc ON (ttc.idtypeculture=tcpt.idtypeculture)
+			JOIN	bdanalysegroupe.tutilisateurs tu ON (tcpt.iddepartement=tu.identite)
+		WHERE
+			SUBSTRING(ttc.codetypeculture FROM 1 FOR 3) LIKE 'PL_'
+			AND	tu.login=$P{LoggedInUserName}
+		) t1 ON (t1.idculture=parc.iep_par_cultid)
+			-- jointure sur les interventions de type semis
+		LEFT JOIN (
+			SELECT	idparcelleculturale, eve_millesime, int_refcategoriecode, eve_qtetot
+			FROM	bdaplat.interventions_$P!{p_millesime}
+			--critere sur les interventions semis plantation realisees sauf cipan
+			WHERE	eve_intervregroupid=9 AND eve_etat=1 AND eve_typeid<>235 AND int_refcategoriecode LIKE 'S'
+			AND	eve_millesime=$P{p_millesime}
+			GROUP BY idparcelleculturale, eve_millesime, int_refcategoriecode, eve_qtetot
+		) t2 ON (parc.iep_idparcelleculturale=t2.idparcelleculturale AND parc.iep_ilo_millesime=t2.eve_millesime)
+
+		WHERE
+			-- critere sur les exploitations reelles
+			te.exp_statut IS NULL
+			-- critere departement
+		AND	te.exp_depid= (SELECT identite FROM bdanalysegroupe.tutilisateurs WHERE login=$P{LoggedInUserName})
+			-- critere sur le millesime
+		AND	parc.iep_ilo_millesime=$P{p_millesime}
+	AND 	(parc.iep_par_bio =
+(case when $P{P_culturesBioEtConv} = 1 then false when $P{P_culturesBioEtConv} = 2 then true when $P{P_culturesBioEtConv} = 3 then true end)
+OR 	parc.iep_par_bio =
+(case when $P{P_culturesBioEtConv} =1 then false when $P{P_culturesBioEtConv} = 2 then true when $P{P_culturesBioEtConv} =3 then false end))
+			-- critere sur les cultures selectionnees
+		AND	t1.libelletypeculture = $P{sub_culture}
+		) req_verif
+
+WHERE
+	-- critere rdt non null
+	--qte_recolte IS NOT NULL
+	-- critere surface >0
+	surface > 0
+AND 	qte_semis > 0
+AND	culture = $P{sub_culture}
+
+GROUP BY millesime,culture, idtypeculture, classes
+ORDER BY millesime, culture, idtypeculture, classes
+) req
+WHERE classes IS NOT NULL
+GROUP BY millesime, culture, idtypeculture, classes, densite_semis, sum_surf
+ORDER BY millesime, culture, idtypeculture, classes, densite_semis, sum_surf) AS req2]]>
+		</queryString>
+		<field name="classes" class="java.lang.String"/>
+		<field name="pourcentages" class="java.math.BigDecimal"/>
+		<field name="culture" class="java.lang.String"/>
+		<group name="gr_culture">
+			<groupExpression><![CDATA[$F{culture}]]></groupExpression>
+		</group>
+	</subDataset>
+	<parameter name="p_millesime" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[2013]]></defaultValueExpression>
+	</parameter>
+	<parameter name="schema_bdaplat_name" class="java.lang.String">
+		<defaultValueExpression><![CDATA["public"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FR_idutilisateur" class="java.lang.Integer"/>
+	<parameter name="p_cultures" class="java.util.List">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["C:\\Users\\aussarec49r\\Documents\\1.Reporting\\2.Developpements\\2.jrxml\\21.A_Livrer_En_Recette\\1.Synthèse_Globale\\"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="P_culturesBioEtConv" class="java.lang.Integer" isForPrompting="false">
+		<defaultValueExpression><![CDATA[1]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT	tv.*, RANK() OVER (PARTITION BY culture ORDER BY variete DESC) AS rang
+FROM	(
+		-- requete tv de egroupement sur les varietes
+		SELECT	tmel.millesime, tmel.culture, tmel.idtypeculture,
+				CASE
+					WHEN tmel.nb_semis=1 THEN variete
+					ELSE 'melange'
+				END AS variete,
+				ROUND((SUM(tmel.qte_recolte)/SUM(tmel.surface))::numeric,1) AS rdt_moy,
+				ROUND((AVG(eve_qtetot/tmel.surface))::numeric,1) AS densite_semis,
+				COUNT(id_parc) AS nb_parcelles,
+				ROUND(sum(surface)::numeric,0) AS sum_surf
+		FROM (
+				-- requete tmel (nb de semis pour identifier les melanges)
+				SELECT	parc.iep_ilo_millesime AS millesime,
+						t1.libelletypeculture AS culture,
+						t1.idtypeculture,
+						(parc.iep_par_rdtmoy * parc.iep_par_surf) AS qte_recolte,
+						parc.iep_par_surf AS surface,
+						COUNT(ti.idevenement) AS nb_semis,
+						MIN(COALESCE(ti.int_lib_origine,'NR')) AS variete,
+						int_refcategoriecode,
+						eve_qtetot,
+						int_qteunite, parc.iep_idparcelleculturale AS id_parc
+
+				FROM	bdaplat.parcelles_$P!{p_millesime} parc
+						-- jointure sur la table des exploitations pour exp_statut et exp_depid
+				JOIN	bdaplat.texploitations te ON (parc.iep_idexploitation = te.idexploitation)
+						-- jointure sur les types de cultures
+				LEFT JOIN (
+						SELECT	tcpt.*,ttc.codetypeculture,ttc.libelletypeculture,tu.identite
+						FROM	bdanalysegroupe.cultures_par_type tcpt
+						JOIN	bdanalysegroupe.type_culture ttc ON (ttc.idtypeculture=tcpt.idtypeculture)
+						JOIN	bdanalysegroupe.tutilisateurs tu ON (tcpt.iddepartement=tu.identite)
+						WHERE	SUBSTRING(ttc.codetypeculture FROM 1 FOR 3) LIKE 'PL_'
+						AND		tu.idutilisateur=$P{FR_idutilisateur}
+						) t1 ON (t1.idculture=parc.iep_par_cultid)
+						-- jointure sur les interventions de type semis pour le semis principal
+				LEFT JOIN (
+						SELECT	eve_millesime, idparcelleculturale, idevenement, int_lib_origine, int_refcategoriecode, eve_qtetot, int_qteunite
+						FROM	bdaplat.interventions_$P!{p_millesime}
+						--critere sur les interventions semis plantation realisees sauf CIPAN et les varietes non precisees
+						WHERE eve_intervregroupid=9 AND eve_etat=1 AND eve_typeid<>235  and int_lib_origine <> 'Variété non précisée - semence' and int_lib_origine <> 'Variété non précisée - plant'
+						)ti ON (parc.iep_idparcelleculturale = ti.idparcelleculturale AND parc.iep_ilo_millesime=ti.eve_millesime)
+
+				WHERE
+						-- critere sur les exploitations reelles
+						te.exp_statut IS NULL
+						-- critere departement
+				AND		te.exp_depid= (SELECT identite FROM bdanalysegroupe.tutilisateurs WHERE idutilisateur=$P{FR_idutilisateur})
+						-- critere sur le millesime
+				AND		parc.iep_ilo_millesime=$P{p_millesime}
+						-- critere sur les cultures selectionnees
+				AND		$X{IN, CAST(t1.idtypeculture AS varchar), p_cultures}
+						-- differenciation des cultures biologiques et conventionnelles
+				AND 	(parc.iep_par_bio =
+						(case when $P{P_culturesBioEtConv} =1 then false when $P{P_culturesBioEtConv} = 2 then true when $P{P_culturesBioEtConv} =3 then true end)
+					OR 	parc.iep_par_bio =
+						(case when $P{P_culturesBioEtConv} =1 then false when $P{P_culturesBioEtConv} = 2 then true when $P{P_culturesBioEtConv} =3 then false end)
+					or 	(CASE WHEN $P{P_culturesBioEtConv} =1 THEN parc.iep_par_bio  is null WHEN $P{P_culturesBioEtConv}= 3 THEN  parc.iep_par_bio  is null end)
+					
+						)
+						
+						-- critere rdt valide
+				AND		parc.iep_par_rdtmoy BETWEEN 5
+				AND		(SELECT tv.valeur_max FROM bdanalysegroupe.moduleverif_plage_valeurs tv WHERE tv.iddepartement=t1.identite AND tv.idculture=parc.iep_par_cultid AND tv.type_critere='iep_par_rdtmoy')
+						-- critere surface >0
+				AND		parc.iep_par_surf > 0
+				AND		int_refcategoriecode LIKE 'S'
+				AND		eve_qtetot IS NOT NULL
+				AND		int_qteunite LIKE 'Kg'
+
+			GROUP BY parc.iep_ilo_millesime,t1.libelletypeculture,t1.idtypeculture,parc.iep_idparcelleculturale,qte_recolte,surface, int_refcategoriecode, eve_qtetot, int_qteunite
+			ORDER BY nb_semis
+			) tmel
+		-- critere parcelles pour lesquelles un semis est renseigné
+		WHERE	nb_semis=1
+		GROUP BY millesime, culture, idtypeculture, CASE WHEN nb_semis=1 THEN variete ELSE 'melange' END
+		) tv
+ORDER BY culture, variete, rang]]>
+	</queryString>
+	<field name="millesime" class="java.lang.Integer"/>
+	<field name="culture" class="java.lang.String"/>
+	<field name="idtypeculture" class="java.lang.Integer"/>
+	<field name="variete" class="java.lang.String"/>
+	<field name="rdt_moy" class="java.math.BigDecimal"/>
+	<field name="densite_semis" class="java.math.BigDecimal"/>
+	<field name="nb_parcelles" class="java.lang.Long"/>
+	<field name="sum_surf" class="java.math.BigDecimal"/>
+	<field name="rang" class="java.lang.Long"/>
+	<variable name="max_densite" class="java.lang.Double" resetType="Group" resetGroup="gr_culture" calculation="Highest">
+		<variableExpression><![CDATA[$F{densite_semis}]]></variableExpression>
+	</variable>
+	<variable name="nb_parcelles" class="java.lang.Integer" resetType="Group" resetGroup="gr_culture" calculation="Sum">
+		<variableExpression><![CDATA[$F{nb_parcelles}]]></variableExpression>
+	</variable>
+	<variable name="sum_surface" class="java.lang.Float" resetType="Group" resetGroup="gr_culture" calculation="Sum">
+		<variableExpression><![CDATA[$F{sum_surf}]]></variableExpression>
+	</variable>
+	<group name="gr_culture" isStartNewPage="true">
+		<groupExpression><![CDATA[$F{culture}]]></groupExpression>
+		<groupHeader>
+			<band height="40">
+				<textField>
+					<reportElement style="titre_edition" x="0" y="0" width="802" height="40" uuid="63f55513-b7a0-4944-90dc-9d1c8e583da9"/>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="none">
+						<font size="20" isBold="false"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Densité de semis sur "+$F{culture}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="388">
+				<multiAxisChart>
+					<chart isShowLegend="false">
+						<reportElement x="0" y="0" width="402" height="198" isPrintWhenDetailOverflows="true" uuid="5d89e089-55d5-4866-bd93-2f2bfcb7ea59"/>
+						<box>
+							<pen lineColor="#999999"/>
+							<topPen lineWidth="0.0" lineColor="#999999"/>
+							<leftPen lineWidth="0.0" lineColor="#999999"/>
+							<bottomPen lineWidth="0.0" lineColor="#999999"/>
+							<rightPen lineWidth="0.0" lineColor="#999999"/>
+						</box>
+						<chartTitle/>
+						<chartSubtitle/>
+						<chartLegend position="Right">
+							<font fontName="Arial" size="12"/>
+						</chartLegend>
+					</chart>
+					<multiAxisPlot>
+						<plot labelRotation="-45.0"/>
+						<axis position="rightOrBottom">
+							<lineChart>
+								<chart isShowLegend="false">
+									<reportElement x="0" y="0" width="0" height="0" backcolor="#FFFFFF" uuid="e96a9155-d1a1-45be-ae93-92348c6f5d69"/>
+									<chartTitle color="#000000"/>
+									<chartSubtitle color="#000000"/>
+									<chartLegend textColor="#000000" backgroundColor="#FFFFFF" position="Right">
+										<font fontName="Arial" size="12"/>
+									</chartLegend>
+								</chart>
+								<categoryDataset>
+									<dataset resetType="Group" resetGroup="gr_culture">
+										<incrementWhenExpression><![CDATA[$F{rang}<13]]></incrementWhenExpression>
+									</dataset>
+									<categorySeries>
+										<seriesExpression><![CDATA[$F{millesime}]]></seriesExpression>
+										<categoryExpression><![CDATA[$F{variete}]]></categoryExpression>
+										<valueExpression><![CDATA[$F{rdt_moy}]]></valueExpression>
+									</categorySeries>
+								</categoryDataset>
+								<linePlot>
+									<plot labelRotation="-25.0">
+										<seriesColor seriesOrder="0" color="#91132E"/>
+									</plot>
+									<categoryAxisLabelExpression><![CDATA["Variété"]]></categoryAxisLabelExpression>
+									<categoryAxisFormat labelRotation="-25.0">
+										<axisFormat>
+											<labelFont>
+												<font fontName="Arial" size="12"/>
+											</labelFont>
+										</axisFormat>
+									</categoryAxisFormat>
+									<valueAxisLabelExpression><![CDATA["Rendement moyen "+($F{idtypeculture}<2000?"(q/ha)":"(tMS/ha)")]]></valueAxisLabelExpression>
+									<valueAxisFormat>
+										<axisFormat labelColor="#91132E" tickLabelColor="#91132E" axisLineColor="#91132E">
+											<labelFont>
+												<font fontName="Arial" size="12" isBold="true"/>
+											</labelFont>
+										</axisFormat>
+									</valueAxisFormat>
+								</linePlot>
+							</lineChart>
+						</axis>
+						<axis position="leftOrTop">
+							<barChart>
+								<chart isShowLegend="false">
+									<reportElement x="0" y="0" width="0" height="0" forecolor="#722EA5" backcolor="#FFFFFF" uuid="c9cc6c8e-349a-4fc4-a0fd-956aff10a890"/>
+									<chartTitle color="#000000"/>
+									<chartSubtitle color="#000000"/>
+									<chartLegend textColor="#000000" backgroundColor="#FFFFFF" position="Right">
+										<font fontName="Arial" size="12"/>
+									</chartLegend>
+								</chart>
+								<categoryDataset>
+									<dataset resetType="Group" resetGroup="gr_culture">
+										<incrementWhenExpression><![CDATA[$F{rang}<13]]></incrementWhenExpression>
+									</dataset>
+									<categorySeries>
+										<seriesExpression><![CDATA[$F{millesime}]]></seriesExpression>
+										<categoryExpression><![CDATA[$F{variete}]]></categoryExpression>
+										<valueExpression><![CDATA[$F{densite_semis}]]></valueExpression>
+									</categorySeries>
+								</categoryDataset>
+								<barPlot isShowLabels="false" isShowTickLabels="true" isShowTickMarks="true">
+									<plot labelRotation="-25.0">
+										<seriesColor seriesOrder="0" color="#C59217"/>
+									</plot>
+									<itemLabel>
+										<font fontName="Arial" size="8"/>
+									</itemLabel>
+									<categoryAxisFormat labelRotation="-25.0">
+										<axisFormat labelColor="#333333" tickLabelColor="#C59217" axisLineColor="#C59217">
+											<tickLabelFont>
+												<font fontName="Arial" size="12"/>
+											</tickLabelFont>
+										</axisFormat>
+									</categoryAxisFormat>
+									<valueAxisLabelExpression><![CDATA["Densité de semis (kg/ha)"]]></valueAxisLabelExpression>
+									<valueAxisFormat>
+										<axisFormat labelColor="#C59217" tickLabelColor="#C59217" verticalTickLabels="false" axisLineColor="#C59217">
+											<labelFont>
+												<font fontName="Arial" size="12" isBold="true"/>
+											</labelFont>
+											<tickLabelFont>
+												<font fontName="Arial" size="10"/>
+											</tickLabelFont>
+										</axisFormat>
+									</valueAxisFormat>
+									<domainAxisMaxValueExpression><![CDATA[$V{max_densite}+30]]></domainAxisMaxValueExpression>
+								</barPlot>
+							</barChart>
+						</axis>
+					</multiAxisPlot>
+				</multiAxisChart>
+				<multiAxisChart>
+					<chart isShowLegend="false">
+						<reportElement x="0" y="198" width="402" height="190" isPrintWhenDetailOverflows="true" uuid="3e6fdb32-a533-4152-90fa-835a2467782a"/>
+						<box>
+							<pen lineColor="#999999"/>
+							<topPen lineWidth="0.0" lineColor="#999999"/>
+							<leftPen lineWidth="0.0" lineColor="#999999"/>
+							<bottomPen lineWidth="0.0" lineColor="#999999"/>
+							<rightPen lineWidth="0.0" lineColor="#999999"/>
+						</box>
+						<chartTitle/>
+						<chartSubtitle/>
+						<chartLegend position="Right">
+							<font fontName="Arial" size="12"/>
+						</chartLegend>
+					</chart>
+					<multiAxisPlot>
+						<plot labelRotation="-45.0"/>
+						<axis position="rightOrBottom">
+							<lineChart>
+								<chart isShowLegend="false">
+									<reportElement x="0" y="0" width="0" height="0" backcolor="#FFFFFF" uuid="8c012d4d-e8c9-4043-8c9f-dcb07aca4487"/>
+									<chartTitle color="#000000"/>
+									<chartSubtitle color="#000000"/>
+									<chartLegend textColor="#000000" backgroundColor="#FFFFFF" position="Right">
+										<font fontName="Arial" size="12"/>
+									</chartLegend>
+								</chart>
+								<categoryDataset>
+									<dataset resetType="Group" resetGroup="gr_culture">
+										<datasetRun subDataset="Date et densité de semis" uuid="be0244e3-41bd-4246-96fe-724a1f66bd97">
+											<datasetParameter name="sub_culture">
+												<datasetParameterExpression><![CDATA[$F{culture}]]></datasetParameterExpression>
+											</datasetParameter>
+											<datasetParameter name="p_millesime">
+												<datasetParameterExpression><![CDATA[$P{p_millesime}]]></datasetParameterExpression>
+											</datasetParameter>
+											<datasetParameter name="LoggedInUserName">
+												<datasetParameterExpression><![CDATA[$P{FR_idutilisateur}]]></datasetParameterExpression>
+											</datasetParameter>
+											<datasetParameter name="P_culturesBioEtConv">
+												<datasetParameterExpression><![CDATA[$P{P_culturesBioEtConv}]]></datasetParameterExpression>
+											</datasetParameter>
+											<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+										</datasetRun>
+									</dataset>
+									<categorySeries>
+										<seriesExpression><![CDATA[$F{millesime}]]></seriesExpression>
+										<categoryExpression><![CDATA[$F{date_semis}]]></categoryExpression>
+										<valueExpression><![CDATA[$F{rdt_moy}]]></valueExpression>
+									</categorySeries>
+								</categoryDataset>
+								<linePlot>
+									<plot labelRotation="-25.0">
+										<seriesColor seriesOrder="0" color="#91132E"/>
+									</plot>
+									<categoryAxisLabelExpression><![CDATA["Semaine de semis"]]></categoryAxisLabelExpression>
+									<categoryAxisFormat labelRotation="-25.0">
+										<axisFormat>
+											<labelFont>
+												<font fontName="Arial" size="12"/>
+											</labelFont>
+										</axisFormat>
+									</categoryAxisFormat>
+									<valueAxisLabelExpression><![CDATA["Rendement moyen "+($F{idtypeculture}<2000?"(q/ha)":"(tMS/ha)")]]></valueAxisLabelExpression>
+									<valueAxisFormat>
+										<axisFormat labelColor="#91132E" tickLabelColor="#91132E" axisLineColor="#91132E">
+											<labelFont>
+												<font fontName="Arial" size="12" isBold="true"/>
+											</labelFont>
+										</axisFormat>
+									</valueAxisFormat>
+								</linePlot>
+							</lineChart>
+						</axis>
+						<axis position="leftOrTop">
+							<barChart>
+								<chart isShowLegend="false">
+									<reportElement x="0" y="0" width="0" height="0" forecolor="#722EA5" backcolor="#FFFFFF" uuid="fcde43f2-b5ef-499b-83ef-a4914cf48193"/>
+									<chartTitle color="#000000"/>
+									<chartSubtitle color="#000000"/>
+									<chartLegend textColor="#000000" backgroundColor="#FFFFFF" position="Right">
+										<font fontName="Arial" size="12"/>
+									</chartLegend>
+								</chart>
+								<categoryDataset>
+									<dataset resetType="Group" resetGroup="gr_culture">
+										<datasetRun subDataset="Date et densité de semis" uuid="aff9657f-625a-4e71-ba39-ee4868f84587">
+											<datasetParameter name="sub_culture">
+												<datasetParameterExpression><![CDATA[$F{culture}]]></datasetParameterExpression>
+											</datasetParameter>
+											<datasetParameter name="p_millesime">
+												<datasetParameterExpression><![CDATA[$P{p_millesime}]]></datasetParameterExpression>
+											</datasetParameter>
+											<datasetParameter name="LoggedInUserName">
+												<datasetParameterExpression><![CDATA[$P{FR_idutilisateur}]]></datasetParameterExpression>
+											</datasetParameter>
+											<datasetParameter name="P_culturesBioEtConv">
+												<datasetParameterExpression><![CDATA[$P{P_culturesBioEtConv}]]></datasetParameterExpression>
+											</datasetParameter>
+											<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+										</datasetRun>
+									</dataset>
+									<categorySeries>
+										<seriesExpression><![CDATA[$F{millesime}]]></seriesExpression>
+										<categoryExpression><![CDATA[$F{date_semis}]]></categoryExpression>
+										<valueExpression><![CDATA[$F{densite_semis}]]></valueExpression>
+									</categorySeries>
+								</categoryDataset>
+								<barPlot isShowLabels="false" isShowTickLabels="true" isShowTickMarks="true">
+									<plot labelRotation="0.0">
+										<seriesColor seriesOrder="0" color="#C59217"/>
+									</plot>
+									<itemLabel/>
+									<categoryAxisFormat labelRotation="0.0">
+										<axisFormat labelColor="#333333" tickLabelColor="#C59217" axisLineColor="#C59217">
+											<labelFont>
+												<font fontName="Arial" size="12"/>
+											</labelFont>
+											<tickLabelFont>
+												<font fontName="Arial" size="12"/>
+											</tickLabelFont>
+										</axisFormat>
+									</categoryAxisFormat>
+									<valueAxisLabelExpression><![CDATA["Densité de semis (kg/ha)"]]></valueAxisLabelExpression>
+									<valueAxisFormat>
+										<axisFormat labelColor="#C59217" tickLabelColor="#C59217" verticalTickLabels="false" axisLineColor="#C59217">
+											<labelFont>
+												<font fontName="Arial" size="12" isBold="true"/>
+											</labelFont>
+											<tickLabelFont>
+												<font fontName="Arial" size="12"/>
+											</tickLabelFont>
+										</axisFormat>
+									</valueAxisFormat>
+								</barPlot>
+							</barChart>
+						</axis>
+					</multiAxisPlot>
+				</multiAxisChart>
+				<barChart>
+					<chart isShowLegend="false">
+						<reportElement x="402" y="198" width="400" height="190" uuid="654c8609-02de-4d8a-8a4e-611c93f546d6"/>
+						<chartTitle/>
+						<chartSubtitle/>
+						<chartLegend/>
+					</chart>
+					<categoryDataset>
+						<dataset resetType="Group" resetGroup="gr_culture">
+							<datasetRun subDataset="Surfaces et densité de semis" uuid="091ab146-b442-4035-b56e-00763800d5b7">
+								<datasetParameter name="p_millesime">
+									<datasetParameterExpression><![CDATA[$P{p_millesime}]]></datasetParameterExpression>
+								</datasetParameter>
+								<datasetParameter name="sub_culture">
+									<datasetParameterExpression><![CDATA[$F{culture}]]></datasetParameterExpression>
+								</datasetParameter>
+								<datasetParameter name="LoggedInUserName">
+									<datasetParameterExpression><![CDATA[$P{FR_idutilisateur}]]></datasetParameterExpression>
+								</datasetParameter>
+								<datasetParameter name="P_culturesBioEtConv">
+									<datasetParameterExpression><![CDATA[$P{P_culturesBioEtConv}]]></datasetParameterExpression>
+								</datasetParameter>
+								<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+							</datasetRun>
+						</dataset>
+						<categorySeries>
+							<seriesExpression><![CDATA[""]]></seriesExpression>
+							<categoryExpression><![CDATA[$F{classes}.split('#')[1]]]></categoryExpression>
+							<valueExpression><![CDATA[$F{pourcentages}]]></valueExpression>
+						</categorySeries>
+					</categoryDataset>
+					<barPlot isShowTickLabels="true" isShowTickMarks="true">
+						<plot labelRotation="-25.0">
+							<seriesColor seriesOrder="0" color="#C59217"/>
+						</plot>
+						<itemLabel/>
+						<categoryAxisLabelExpression><![CDATA["Densité de semis (kg/ha)"]]></categoryAxisLabelExpression>
+						<categoryAxisFormat labelRotation="-25.0">
+							<axisFormat>
+								<labelFont>
+									<font fontName="Arial" size="12"/>
+								</labelFont>
+								<tickLabelFont>
+									<font fontName="Arial" size="12"/>
+								</tickLabelFont>
+							</axisFormat>
+						</categoryAxisFormat>
+						<valueAxisLabelExpression><![CDATA["% de la surface cultivée"]]></valueAxisLabelExpression>
+						<valueAxisFormat>
+							<axisFormat labelColor="#C59217" tickLabelColor="#C59217" axisLineColor="#C59217">
+								<labelFont>
+									<font fontName="Arial" size="12" isBold="true"/>
+								</labelFont>
+							</axisFormat>
+						</valueAxisFormat>
+						<domainAxisMaxValueExpression><![CDATA[$V{max_densite}+30]]></domainAxisMaxValueExpression>
+					</barPlot>
+				</barChart>
+				<textField evaluationTime="Group" evaluationGroup="gr_culture" pattern="###0 parcelle(s)">
+					<reportElement style="texte_defaut" isPrintRepeatedValues="false" x="519" y="17" width="257" height="25" uuid="37b99556-d410-415a-9bc7-a759d2bff4b0"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<pen lineStyle="Double" lineColor="#009F49"/>
+						<topPen lineWidth="2.0" lineStyle="Double" lineColor="#009F49"/>
+						<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineWidth="1.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Echantillon"]]></textFieldExpression>
+				</textField>
+				<textField pattern="###0 parcelle(s)">
+					<reportElement style="texte_defaut" isPrintRepeatedValues="false" x="519" y="42" width="257" height="21" uuid="353c92de-cc55-4a5f-9da9-85f44ce8ba6e"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<pen lineStyle="Double" lineColor="#009F49"/>
+						<topPen lineWidth="0.0" lineStyle="Double" lineColor="#009F49"/>
+						<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineWidth="0.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{nb_parcelles}+" parcelles"]]></textFieldExpression>
+				</textField>
+				<textField pattern="###0 ha" isBlankWhenNull="true">
+					<reportElement style="texte_defaut" isPrintRepeatedValues="false" x="519" y="63" width="257" height="22" uuid="d4d7a319-8f6d-45db-8803-0179c7b804eb"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<pen lineStyle="Solid" lineColor="#009F49"/>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#009F49"/>
+						<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{sum_surface}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupFooter>
+	</group>
+</jasperReport>

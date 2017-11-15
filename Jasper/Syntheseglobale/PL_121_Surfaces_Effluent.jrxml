@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.2.0  -->
+<!-- 2017-11-15T16:29:05 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PL Globa : Surface_effluents" language="groovy" pageWidth="802" pageHeight="515" orientation="Landscape" columnWidth="802" leftMargin="0" rightMargin="0" topMargin="30" bottomMargin="20" uuid="5f51769e-fa59-4b2c-82de-92cfc21f2ccb">
+	<property name="ireport.zoom" value="0.7513148009015791"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.jasperserver.url" value="http://172.24.12.203:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.user" value="jasperadmin"/>
+	<property name="ireport.jasperserver.report.resource" value="/rapports_PL/analyses/PL_121_Surfaces_Effluent"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="BDSOLDWH TEST"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<template><![CDATA["repo:/styles/PL_style_rapports"]]></template>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<parameter name="p_millesime" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[2013]]></defaultValueExpression>
+	</parameter>
+	<parameter name="schema_bdaplat_name" class="java.lang.String">
+		<defaultValueExpression><![CDATA["public"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FR_idutilisateur" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["C:\\Users\\aussarec49r\\Documents\\3.Developpements\\jrxml\\Etat104-SAUMoy_evolution\\"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_cultures" class="java.util.List">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="P_culturesBioEtConv" class="java.lang.Integer" isForPrompting="false">
+		<defaultValueExpression><![CDATA[1]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT ROUND(((sum_surf*100)/(SUM(sum_surf) OVER (PARTITION BY culture)))::numeric,1) AS pourc_surf ,type_effluent, culture  FROM(
+SELECT req_union.millesime, req_union.lib_culture AS culture, req_union.id_culture, type_effluent, sum(req_union.surface) AS sum_surf FROM
+(
+-------------------------------------------
+-- requete sur les parcelles avec effluent
+SELECT	millesime, lib_culture, id_culture,
+	-- distinction des types d'effluent
+	CASE
+		-- parcelles avec effluent de type 1
+		WHEN (nb_effluents=1 AND id_effluent=20001) THEN '2#Type1'
+		-- parcelles avec effluent de type 2
+		WHEN (nb_effluents=1 AND id_effluent=20002) THEN '3#Type2'
+		-- parcelles avec effluent de type 1 ET 2
+		WHEN (nb_effluents=2 AND id_effluent=20002) THEN '4#Type1+2'
+		ELSE NULL
+	END AS type_effluent,
+	surface
+FROM	(
+	SELECT *,COUNT(id_effluent) OVER (PARTITION BY idparc) AS nb_effluents
+	FROM (
+		SELECT	parc.iep_idexploitation, teff.idparcelleculturale AS idparc, teff.idregroupementeffluent AS id_effluent, SUM (teff.eve_surfacetravaille) AS surface, cult.libelletypeculture AS lib_culture, cult.idtypeculture AS id_culture, parc.iep_par_millesime AS millesime
+		FROM	bdaplat.parcelles_$P!{p_millesime} parc
+		-- jointure sur les interventions et les types d'effluent
+		JOIN	(
+			SELECT 	i.eve_millesime, i.eve_surfacetravaille, i.idexploitation, treg.idregroupementeffluent, i.idparcelleculturale
+			FROM	bdaplat.interventions_$P!{p_millesime} i
+			-- jointure sur les types d'effluent
+			JOIN	bdaplat.tregroupementeffluent_pdl treg USING (int_lib_origine)
+			) teff ON (teff.idparcelleculturale = parc.iep_idparcelleculturale)
+		-- jointure sur les types de cultures
+		LEFT JOIN (
+			SELECT tcpt.*,ttc.codetypeculture,ttc.libelletypeculture,tu.identite
+			FROM	bdanalysegroupe.cultures_par_type tcpt
+			JOIN	bdanalysegroupe.type_culture ttc ON (ttc.idtypeculture=tcpt.idtypeculture)
+			JOIN	bdanalysegroupe.tutilisateurs tu ON (tcpt.iddepartement=tu.identite)
+			WHERE	SUBSTRING(ttc.codetypeculture FROM 1 FOR 3) LIKE 'PL_'
+			AND	tu.idutilisateur=$P{FR_idutilisateur}
+			) cult ON (cult.idculture=parc.iep_par_cultid)
+	-- differenciation des cultures BIO et conventionnelles
+WHERE	(parc.iep_par_bio =
+(case when $P{P_culturesBioEtConv} =1 then false when $P{P_culturesBioEtConv} = 2 then true when $P{P_culturesBioEtConv} =3 then true end)
+OR 	parc.iep_par_bio =
+(case when $P{P_culturesBioEtConv} =1 then false when $P{P_culturesBioEtConv} = 2 then true when $P{P_culturesBioEtConv} =3 then false end)
+OR
+(CASE WHEN $P{P_culturesBioEtConv} =1 THEN parc.iep_par_bio  is null WHEN $P{P_culturesBioEtConv}= 3 THEN  parc.iep_par_bio  is null end)
+)
+		GROUP BY millesime, idparc, id_effluent, lib_culture, id_culture, parc.iep_idexploitation
+		)t1
+		-- jointure sur la table des exploitations pour exp_statut et exp_depid
+		JOIN (
+			SELECT expl.exp_statut, expl.exp_depid, expl.idexploitation
+			FROM bdaplat.texploitations expl) te ON (t1.iep_idexploitation = te.idexploitation)
+	)req
+WHERE
+	-- critere sur les exploitations reelles
+	req.exp_statut IS NULL
+	-- critere departement
+AND	req.exp_depid= (SELECT identite FROM bdanalysegroupe.tutilisateurs WHERE idutilisateur=$P{FR_idutilisateur})
+	-- suppression des doublons pour les parcelles de Type 1+2
+AND NOT	(nb_effluents = 2 AND id_effluent=20001)
+	-- critere sur les cultures selectionnees
+AND	$X{IN, CAST(id_culture AS varchar), p_cultures}
+	-- critere libelle culture non nul
+AND	lib_culture IS NOT NULL
+
+UNION
+-------------------------------------------
+-- requete sur les parcelles sans matiere organique
+SELECT	millesime, lib_culture, id_culture,
+	'1#Pas de matières organiques' AS type_effluent, surface
+FROM
+	(
+	SELECT *
+	FROM (
+		SELECT	parc.iep_idexploitation, teff.int_lib_origine, teff.idparcelleculturale AS idparc, cult.libelletypeculture AS lib_culture, cult.idtypeculture AS id_culture, teff.idregroupementeffluent AS id_effluent, SUM (teff.eve_surfacetravaille) AS surface, parc.iep_par_millesime AS millesime
+		FROM	bdaplat.parcelles_$P!{p_millesime} parc
+		-- jointure sur les interventions et les types d'effluent
+		JOIN	(
+			SELECT 	*
+			FROM	bdaplat.interventions_$P!{p_millesime} i
+			-- jointure sur les types d'effluent
+			LEFT JOIN	bdaplat.tregroupementeffluent_pdl treg USING (int_lib_origine)
+		) teff ON (teff.idparcelleculturale = parc.iep_idparcelleculturale)
+		-- jointure sur les types de cultures
+		LEFT JOIN (
+			SELECT tcpt.*,ttc.codetypeculture,ttc.libelletypeculture,tu.identite
+			FROM	bdanalysegroupe.cultures_par_type tcpt
+			JOIN	bdanalysegroupe.type_culture ttc ON (ttc.idtypeculture=tcpt.idtypeculture)
+			JOIN	bdanalysegroupe.tutilisateurs tu ON (tcpt.iddepartement=tu.identite)
+			WHERE	SUBSTRING(ttc.codetypeculture FROM 1 FOR 3) LIKE 'PL_'
+			AND	tu.idutilisateur=$P{FR_idutilisateur}
+			) cult ON (cult.idculture=parc.iep_par_cultid)
+			-- differenciation des cultures BIO et conventionnelles
+WHERE	(parc.iep_par_bio =
+(case when $P{P_culturesBioEtConv} =1 then false when $P{P_culturesBioEtConv} = 2 then true when $P{P_culturesBioEtConv} =3 then true end)
+OR 	parc.iep_par_bio =
+(case when $P{P_culturesBioEtConv} =1 then false when $P{P_culturesBioEtConv} = 2 then true when $P{P_culturesBioEtConv} =3 then false end)
+OR
+(CASE WHEN $P{P_culturesBioEtConv} =1 THEN parc.iep_par_bio  is null WHEN $P{P_culturesBioEtConv}= 3 THEN  parc.iep_par_bio  is null end)
+)
+		GROUP BY millesime, idparc, id_effluent, lib_culture, id_culture, teff.int_lib_origine, parc.iep_idexploitation
+		)t1
+		JOIN (
+			SELECT expl.exp_statut, expl.exp_depid, expl.idexploitation
+			FROM bdaplat.texploitations expl) te ON (t1.iep_idexploitation = te.idexploitation)
+	)req
+WHERE
+	-- critere sur les exploitations reelles
+	req.exp_statut IS NULL
+	-- critere departement
+AND	req.exp_depid= (SELECT identite FROM bdanalysegroupe.tutilisateurs WHERE idutilisateur=$P{FR_idutilisateur})
+	-- selection des parcelles sans matières organiques
+AND	req.int_lib_origine IS NULL
+	-- critere sur les cultures selectionnees
+AND	$X{IN, CAST(id_culture AS varchar), p_cultures}
+	-- critere libelle culture non nul
+AND	lib_culture IS NOT NULL
+) req_union
+GROUP BY req_union.millesime, type_effluent, req_union.lib_culture, req_union.id_culture
+ORDER BY millesime,id_culture,lib_culture, type_effluent)req2
+GROUP BY culture, type_effluent, sum_surf
+ORDER BY culture, type_effluent, sum_surf]]>
+	</queryString>
+	<field name="pourc_surf" class="java.math.BigDecimal"/>
+	<field name="type_effluent" class="java.lang.String"/>
+	<field name="culture" class="java.lang.String"/>
+	<title>
+		<band height="40" splitType="Stretch">
+			<textField>
+				<reportElement style="titre_edition" x="0" y="0" width="802" height="40" uuid="3d46dbde-66db-4111-96a4-9face8092e2a"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font size="20"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Surfaces et effluents"]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<summary>
+		<band height="375">
+			<stackedBarChart>
+				<chart>
+					<reportElement x="21" y="10" width="752" height="365" uuid="80c74bea-8009-45db-ae78-62eab9ce162b"/>
+					<chartTitle position="Top"/>
+					<chartSubtitle/>
+					<chartLegend position="Right"/>
+				</chart>
+				<categoryDataset>
+					<categorySeries>
+						<seriesExpression><![CDATA[$F{type_effluent}.split('#')[1]]]></seriesExpression>
+						<categoryExpression><![CDATA[$F{culture}]]></categoryExpression>
+						<valueExpression><![CDATA[$F{pourc_surf}]]></valueExpression>
+					</categorySeries>
+				</categoryDataset>
+				<barPlot>
+					<plot labelRotation="-45.0">
+						<seriesColor seriesOrder="0" color="#FF9900"/>
+						<seriesColor seriesOrder="1" color="#D2474B"/>
+						<seriesColor seriesOrder="2" color="#F1EB3B"/>
+						<seriesColor seriesOrder="3" color="#89BF39"/>
+						<seriesColor seriesOrder="4" color="#4575EA"/>
+						<seriesColor seriesOrder="5" color="#00338D"/>
+						<seriesColor seriesOrder="6" color="#4575EA"/>
+						<seriesColor seriesOrder="7" color="#41C9D7"/>
+						<seriesColor seriesOrder="8" color="#CBC8AE"/>
+						<seriesColor seriesOrder="9" color="#666666"/>
+						<seriesColor seriesOrder="10" color="#6B4F92"/>
+						<seriesColor seriesOrder="11" color="#D2474B"/>
+						<seriesColor seriesOrder="12" color="#41C9D7"/>
+						<seriesColor seriesOrder="13" color="#007A3F"/>
+						<seriesColor seriesOrder="14" color="#EE82C2"/>
+						<seriesColor seriesOrder="15" color="#CBC8AE"/>
+						<seriesColor seriesOrder="16" color="#04259F"/>
+					</plot>
+					<itemLabel/>
+					<categoryAxisFormat labelRotation="-45.0">
+						<axisFormat/>
+					</categoryAxisFormat>
+					<valueAxisLabelExpression><![CDATA["Surface (en %)"]]></valueAxisLabelExpression>
+					<valueAxisFormat>
+						<axisFormat/>
+					</valueAxisFormat>
+				</barPlot>
+			</stackedBarChart>
+		</band>
+	</summary>
+</jasperReport>

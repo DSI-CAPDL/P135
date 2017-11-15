@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.2.0  -->
+<!-- 2017-11-15T16:29:01 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PL_Groupe_SynthEco_Resultats" language="groovy" pageWidth="802" pageHeight="1030" orientation="Landscape" columnWidth="802" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="65412db6-1cc7-4524-bc04-5b8884b3047f">
+	<property name="ireport.zoom" value="0.8264462809917354"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.jasperserver.url" value="http://172.24.12.203:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.user" value="jasperadmin"/>
+	<property name="ireport.jasperserver.report.resource" value="/rapports_PL/analyses/PL_119_Analyses_Sol"/>
+	<template><![CDATA["repo:/styles/PL_style_rapports"]]></template>
+	<style name="CrossTab Valeur" forecolor="#000000" backcolor="#FFFFFF" fill="Solid" hTextAlign="Center" hImageAlign="Center" vTextAlign="Middle" vImageAlign="Middle" isBold="false" isItalic="true" isUnderline="false" isStrikeThrough="false">
+		<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{clef}.split('#')[0]=="000"||$V{clef}.split('#')[0]=="001"||$V{clef}.split('#')[0]=="002"||$V{clef}.split('#')[0]=="005"||$V{clef}.split('#')[0]=="012"||$V{clef}.split('#')[0]=="013"||$V{clef}.split('#')[0]=="014")]]></conditionExpression>
+			<style mode="Opaque" forecolor="#004A1D" backcolor="#FFFFFF" fill="Solid" vTextAlign="Middle" vImageAlign="Middle" fontSize="10" isBold="true" isItalic="false">
+				<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="1.0" lineColor="#FEFEFE"/>
+					<topPen lineWidth="1.0" lineColor="#FEFEFE"/>
+					<leftPen lineWidth="1.0" lineColor="#FEFEFE"/>
+					<bottomPen lineWidth="1.0" lineColor="#FEFEFE"/>
+					<rightPen lineWidth="1.0" lineColor="#FEFEFE"/>
+				</box>
+			</style>
+		</conditionalStyle>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{clef}.split('#')[0]=="015"||$V{clef}.split('#')[0]=="016"||$V{clef}.split('#')[0]=="019"||$V{clef}.split('#')[0]=="020")]]></conditionExpression>
+			<style forecolor="#004A1D" backcolor="#95E466" fontSize="10" isBold="true" isItalic="false">
+				<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+			</style>
+		</conditionalStyle>
+	</style>
+	<style name="CrossTab Clef" style="CrossTab Valeur" mode="Opaque" fill="Solid" hTextAlign="Left" hImageAlign="Left" fontName="SansSerif" fontSize="10" isBold="false" isItalic="true" isUnderline="false" isStrikeThrough="false">
+		<box leftPadding="50">
+			<pen lineColor="#CCCCCC"/>
+			<topPen lineWidth="0.5" lineColor="#CCCCCC"/>
+			<leftPen lineWidth="0.5" lineColor="#CCCCCC"/>
+			<bottomPen lineWidth="0.5" lineColor="#CCCCCC"/>
+			<rightPen lineWidth="0.5" lineColor="#CCCCCC"/>
+		</box>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{clef}.split('#')[0]=="000"||$V{clef}.split('#')[0]=="001"||$V{clef}.split('#')[0]=="002"||$V{clef}.split('#')[0]=="005"||$V{clef}.split('#')[0]=="012"||$V{clef}.split('#')[0]=="013"||$V{clef}.split('#')[0]=="014")]]></conditionExpression>
+			<style mode="Opaque" forecolor="#004A1D" backcolor="#FFFFFF" fill="Solid" hTextAlign="Left" hImageAlign="Left" isBold="true" isItalic="false" isUnderline="false" isStrikeThrough="false">
+				<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+				<box leftPadding="4"/>
+			</style>
+		</conditionalStyle>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{clef}.split('#')[0]=="015"||$V{clef}.split('#')[0]=="016"||$V{clef}.split('#')[0]=="019"||$V{clef}.split('#')[0]=="020")]]></conditionExpression>
+			<style forecolor="#004A1D" backcolor="#95E466" fill="Solid" fontSize="10" isBold="true" isItalic="false">
+				<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+				<box leftPadding="4"/>
+			</style>
+		</conditionalStyle>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{clef}.split('#')[0]=="020")]]></conditionExpression>
+			<style fontSize="12">
+				<paragraph lineSpacing="Single" spacingBefore="6" spacingAfter="6"/>
+			</style>
+		</conditionalStyle>
+	</style>
+	<style name="CrossTab Type" forecolor="#004A1D" fontSize="11">
+		<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+		<box leftPadding="4"/>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{type}.split('#')[0]=="04")]]></conditionExpression>
+			<style mode="Transparent" fontSize="11">
+				<paragraph lineSpacing="1_1_2"/>
+			</style>
+		</conditionalStyle>
+	</style>
+	<subDataset name="nb_analyses_par_expl" uuid="c6f182f7-54e6-4f47-836b-6cdfc5614c03">
+		<parameter name="p_millesime" class="java.lang.Integer">
+			<defaultValueExpression><![CDATA[2013]]></defaultValueExpression>
+		</parameter>
+		<queryString>
+			<![CDATA[SELECT ROUND(((nb_expl*100)/sum(nb_expl) OVER (PARTITION BY test))::numeric,0) AS pourc_exploitations, classes FROM (
+SELECT count(idexpl) AS nb_expl, classes, 1 AS test FROM(
+SELECT date_prelevement,req.idexploitation AS idexpl,
+CASE
+WHEN ((nb_analyses BETWEEN 1 AND 3) AND (date_prelevement > $P{p_millesime}-4)) THEN '1 à 3 analyses'
+WHEN ((nb_analyses > 3) AND (date_prelevement > $P{p_millesime}-4)) THEN 'plus de 3 analyses'
+WHEN nb_analyses IS NULL THEN '0 analyses'
+ELSE NULL
+END AS classes
+FROM(
+bdaplat.texploitations te
+FULL JOIN (SELECT ana.ana_idexploitation AS idexpl, ROUND(EXTRACT(YEAR from ana.ana_dateprelevement)::numeric,0) AS date_prelevement,
+count(ana.idanalyse) AS nb_analyses FROM bdaplat.pdl_analyse_sol ana GROUP BY idexpl, date_prelevement
+ORDER BY idexpl)t0 ON (te.idexploitation = t0.idexpl))req)req2
+WHERE classes IS NOT NULL
+GROUP BY classes
+ORDER BY classes)req3]]>
+		</queryString>
+		<field name="pourc_exploitations" class="java.math.BigDecimal"/>
+		<field name="classes" class="java.lang.String"/>
+	</subDataset>
+	<parameter name="p_millesime" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[2013]]></defaultValueExpression>
+	</parameter>
+	<parameter name="schema_bdaplat_name" class="java.lang.String">
+		<defaultValueExpression><![CDATA["public"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FR_idutilisateur" class="java.lang.Integer"/>
+	<parameter name="p_cultures" class="java.util.List">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT DISTINCT
+
+unnest(array[
+'PH eau',
+'Matières organiques',
+'Valeur CEC Metson',
+'Teneurs en P205 Olsen',
+'Teneurs en P205 Dyer',
+'Teneurs en P205 Joret-Hébert',
+'Teneurs en CaO',
+'Teneurs en MgO'
+]) AS clef,
+
+unnest(array[
+'',
+'%',
+'meq/kg',
+'g/kg',
+'g/kg',
+'g/kg',
+'g/kg',
+'g/kg'
+]) AS clef_unite,
+
+unnest(array[
+'ana.valeur_ph',
+'ana.valeur_teneur_mo',
+'ana.valeur_cec',
+'valeur_teneur_p',
+'valeur_teneur_p',
+'valeur_teneur_p',
+'ana.valeur_teneur_ca',
+'ana.valeur_teneur_mg'
+]) AS donnees,
+
+unnest(array[
+'AVG(ana.valeur_ph)',
+'CASE
+	WHEN (ana.unite_mo NOT LIKE ''g/kg'' AND ana.unite_mo IS NOT NULL)
+	THEN (ana.valeur_teneur_mo)
+	ELSE NULL
+END',
+'CASE
+	WHEN (ana.methode_cec LIKE ''Metson'' AND ana.unite_CEC LIKE ''meq/kg'')
+	THEN (ana.valeur_cec)
+	WHEN (ana.methode_cec LIKE ''Metson'' AND ana.unite_CEC LIKE ''meq/100g'')
+	THEN (ana.valeur_cec/10)
+	ELSE NULL
+END',
+'CASE
+	WHEN(ana.methode_p LIKE ''Olsen'' AND ana.unite_p LIKE ''g/kg'')
+	THEN (ana.valeur_teneur_p)
+	WHEN(ana.methode_p LIKE ''Olsen'' AND ana.unite_p LIKE ''ppm'')
+	THEN (ana.valeur_teneur_p/1000)
+	ELSE NULL
+END',
+'CASE
+	WHEN(ana.methode_p LIKE ''Dyer'' AND ana.unite_p LIKE ''g/kg'')
+	THEN (ana.valeur_teneur_p)
+	WHEN(ana.methode_p LIKE ''Dyer'' AND ana.unite_p LIKE ''ppm'')
+	THEN (ana.valeur_teneur_p/1000)
+	ELSE NULL
+END',
+'CASE
+	WHEN(ana.methode_p LIKE ''Joret-Hebert'' AND ana.unite_p LIKE ''g/kg'')
+	THEN (ana.valeur_teneur_p)
+	WHEN(ana.methode_p LIKE ''Joret-Hebert'' AND ana.unite_p LIKE ''ppm'')
+	THEN (ana.valeur_teneur_p/1000)
+	ELSE NULL
+END',
+'CASE
+	WHEN (ana.unite_ca LIKE ''g/kg'')
+	THEN (ana.valeur_teneur_ca)
+	WHEN (ana.unite_ca LIKE ''mg/kg'' OR ana.unite_ca LIKE ''ppm'')
+	THEN (ana.valeur_teneur_ca/1000)
+	ELSE NULL
+END',
+'CASE
+	WHEN (ana.unite_mg LIKE ''g/kg'')
+	THEN ana.valeur_teneur_mg
+	WHEN (ana.unite_mg LIKE ''mg/kg'' OR ana.unite_mg LIKE ''ppm'')
+	THEN (ana.valeur_teneur_mg/1000)
+	ELSE NULL
+END'
+]) AS valeur,
+
+
+unnest(array[
+'CASE
+	WHEN (valeur BETWEEN 5 AND 5.5)
+		THEN ''1#5-5.5''
+	WHEN (valeur BETWEEN 5.5 AND 6)
+		THEN ''2#5.5-6''
+	WHEN (valeur BETWEEN 6 AND 6.5)
+		THEN ''3#6-6.5''
+	WHEN (valeur BETWEEN 6.5 AND 7)
+		THEN ''4#6.5-7''
+	WHEN (valeur BETWEEN 7 AND 7.5)
+		THEN ''5#7-7.5''
+	WHEN (valeur > 7.5)
+		THEN ''6#>7.5''
+	ELSE NULL
+END',
+
+'CASE
+	WHEN (valeur < 1.5)
+		THEN ''1#<1.5 ''
+	WHEN (valeur BETWEEN 1.5 AND 2)
+		THEN ''2#1.5-2 ''
+	WHEN (valeur BETWEEN 2 AND 2.5)
+		THEN ''3#2-2.5 ''
+	WHEN (valeur BETWEEN 2.5 AND 3)
+		THEN ''4#2.5-3 ''
+	WHEN (valeur > 3)
+		THEN ''5#>3 ''
+	ELSE NULL
+END',
+
+
+'CASE
+	WHEN (valeur < 30)
+		THEN ''1#<30 meq/kg''
+	WHEN (valeur BETWEEN 30 AND 70)
+		THEN ''2#30-70 meq/kg''
+	WHEN (valeur BETWEEN 70 AND 110)
+		THEN ''3#70-110 meq/kg''
+	WHEN (valeur BETWEEN 110 AND 150)
+		THEN ''4#110-150 meq/kg''
+	WHEN (valeur BETWEEN 150 AND 300)
+		THEN ''4#150-300 meq/kg''
+	WHEN (valeur > 300)
+		THEN ''5#>300 meq/kg''
+	ELSE NULL
+END',
+
+'CASE
+	WHEN (valeur < 0.02)
+		THEN ''1#<0.02 g/kg''
+	WHEN (valeur BETWEEN 0.02 AND 0.04)
+		THEN ''2#0.02-0.04 g/kg''
+	WHEN (valeur BETWEEN 0.04 AND 0.06)
+		THEN ''3#0.04-0.06 g/kg''
+	WHEN (valeur BETWEEN 0.06 AND 0.08)
+		THEN ''4#0.06-0.08 g/kg''
+	WHEN (valeur BETWEEN 0.08 AND 0.1)
+		THEN ''4#0.08-0.1 g/kg''
+	WHEN (valeur > 0.1)
+		THEN ''5#>0.1 g/kg''
+	ELSE NULL
+END',
+
+'CASE
+	WHEN (valeur < 0.1)
+		THEN ''1#<0.1 g/kg''
+	WHEN (valeur BETWEEN 0.01 AND 0.02)
+		THEN ''2#0.1-0.2 g/kg''
+	WHEN (valeur BETWEEN 0.2 AND 0.3)
+		THEN ''3#0.2-0.3 g/kg''
+	WHEN (valeur BETWEEN 0.3 AND 0.4)
+		THEN ''4#0.3-0.4 g/kg''
+	WHEN (valeur BETWEEN 0.4 AND 0.5)
+		THEN ''4#0.4-0.5 g/kg''
+	WHEN (valeur > 0.5)
+		THEN ''5#>0.5 g/kg''
+	ELSE NULL
+END',
+
+'CASE
+	WHEN (valeur < 0.1)
+		THEN ''1#<0.1 g/kg''
+	WHEN (valeur BETWEEN 0.1 AND 0.2)
+		THEN ''2#0.1-0.2 g/kg''
+	WHEN (valeur BETWEEN 0.2 AND 0.3)
+		THEN ''3#0.2-0.3 g/kg''
+	WHEN (valeur BETWEEN 0.03 AND 0.04)
+		THEN ''4#0.3-0.4 g/kg''
+	WHEN (valeur BETWEEN 0.4 AND 0.5)
+		THEN ''5#0.4-0.5 g/kg''
+	WHEN (valeur > 0.5)
+		THEN ''6#>0.5 g/kg''
+	ELSE NULL
+END',
+
+'CASE
+	WHEN (valeur < 0.5)
+		THEN ''1#<0.5 g/kg''
+	WHEN (valeur BETWEEN 0.5 AND 1)
+		THEN ''2#0.5-1 g/kg''
+	WHEN (valeur BETWEEN 1 AND 1.5)
+		THEN ''3#1-1.5 g/kg''
+	WHEN (valeur BETWEEN 1.5 AND 2)
+		THEN ''4#1.5-2 g/kg''
+	WHEN (valeur BETWEEN 2 AND 2.5)
+		THEN ''4#2-2.5 g/kg''
+	WHEN (valeur > 2.5)
+		THEN ''5#>2.5 g/kg''
+	ELSE NULL
+END',
+'CASE
+	WHEN (valeur < 0.08)
+		THEN ''1#<0.08 g/kg''
+	WHEN (valeur BETWEEN 0.08 AND 0.12)
+		THEN ''2#0.08-0.12 g/kg''
+	WHEN (valeur BETWEEN 0.12 AND 0.16)
+		THEN ''3#0.12-0.16 g/kg''
+	WHEN (valeur BETWEEN 0.16 AND 0.2)
+		THEN ''4#0.16-0.2 g/kg''
+	WHEN (valeur > 0.2)
+		THEN ''5#>0.2 g/kg''
+	ELSE NULL
+END'
+]) AS classes,
+
+unnest(array[
+'NULL',
+'unite_mo',
+'ana.unite_CEC',
+'ana.unite_p',
+'ana.unite_p',
+'ana.unite_p',
+'ana.unite_ca',
+'ana.unite_mg'
+]) AS unite,
+
+unnest(array[
+'NULL',
+'NULL',
+'ana.methode_cec',
+'ana.methode_p',
+'ana.methode_p',
+'ana.methode_p',
+'NULL',
+'NULL'
+]) AS methode
+
+FROM bdaplat.texploitations te
+
+WHERE
+	te.exp_depid= (SELECT identite
+	FROM bdanalysegroupe.tutilisateurs WHERE idutilisateur=$P{FR_idutilisateur})
+
+ORDER BY clef]]>
+	</queryString>
+	<field name="clef" class="java.lang.String"/>
+	<field name="clef_unite" class="java.lang.String"/>
+	<field name="donnees" class="java.lang.String"/>
+	<field name="valeur" class="java.lang.String"/>
+	<field name="classes" class="java.lang.String"/>
+	<field name="unite" class="java.lang.String"/>
+	<field name="methode" class="java.lang.String"/>
+	<group name="clef" isStartNewPage="true">
+		<groupExpression><![CDATA[$F{clef}]]></groupExpression>
+		<groupHeader>
+			<band/>
+		</groupHeader>
+		<groupFooter>
+			<band height="515">
+				<subreport isUsingCache="false">
+					<reportElement x="0" y="0" width="802" height="515" uuid="2cd2df0e-68a1-4d08-9b3e-a36e10e4cb25"/>
+					<subreportParameter name="clef">
+						<subreportParameterExpression><![CDATA[$F{clef}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="unite">
+						<subreportParameterExpression><![CDATA[$F{unite}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="classes">
+						<subreportParameterExpression><![CDATA[$F{classes}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="formule">
+						<subreportParameterExpression><![CDATA[$F{valeur}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="methode">
+						<subreportParameterExpression><![CDATA[$F{methode}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="clef_unite">
+						<subreportParameterExpression><![CDATA[$F{clef_unite}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="donnees">
+						<subreportParameterExpression><![CDATA[$F{donnees}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="p_millesime">
+						<subreportParameterExpression><![CDATA[$P{p_millesime}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="FR_idutilisateur">
+						<subreportParameterExpression><![CDATA[$P{FR_idutilisateur}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression><![CDATA["repo:/rapports_PL/analyses/sub_PL_119_AnalysesTerre"]]></subreportExpression>
+				</subreport>
+			</band>
+		</groupFooter>
+	</group>
+	<summary>
+		<band height="403">
+			<pieChart>
+				<chart>
+					<reportElement x="0" y="40" width="802" height="363" uuid="7e609d8a-7a73-4247-90eb-b990b277b4e5"/>
+					<chartTitle/>
+					<chartSubtitle/>
+					<chartLegend position="Right"/>
+				</chart>
+				<pieDataset>
+					<dataset>
+						<datasetRun subDataset="nb_analyses_par_expl" uuid="4fbaa468-6f27-4879-9935-cf322842410e">
+							<datasetParameter name="p_millesime">
+								<datasetParameterExpression><![CDATA[$P{p_millesime}]]></datasetParameterExpression>
+							</datasetParameter>
+						</datasetRun>
+					</dataset>
+					<keyExpression><![CDATA[$F{classes}]]></keyExpression>
+					<valueExpression><![CDATA[$F{pourc_exploitations}]]></valueExpression>
+					<labelExpression><![CDATA[$F{pourc_exploitations}+"%"]]></labelExpression>
+				</pieDataset>
+				<piePlot isShowLabels="true" isCircular="true" labelFormat="{1}">
+					<plot>
+						<seriesColor seriesOrder="0" color="#F1EB3B"/>
+						<seriesColor seriesOrder="1" color="#C59217"/>
+						<seriesColor seriesOrder="2" color="#761600"/>
+					</plot>
+					<itemLabel/>
+				</piePlot>
+			</pieChart>
+			<textField>
+				<reportElement style="titre_edition" x="0" y="0" width="802" height="40" uuid="4e49dec8-88f0-42a9-acd4-06e9919577d1"/>
+				<textElement textAlignment="Center" verticalAlignment="Top" markup="none">
+					<font size="20" isBold="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Pourcentage d'exploitations par analyses de sol"]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

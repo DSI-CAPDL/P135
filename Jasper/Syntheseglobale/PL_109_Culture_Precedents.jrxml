@@ -1,0 +1,246 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.2.0  -->
+<!-- 2017-11-15T16:26:43 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PL_Globale_CulturePrecedent" language="groovy" pageWidth="802" pageHeight="515" orientation="Landscape" columnWidth="802" leftMargin="0" rightMargin="0" topMargin="30" bottomMargin="0" uuid="c93e7e08-d4d8-489b-b2e1-51ac66bb58d0">
+	<property name="ireport.zoom" value="0.9313819845887326"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.jasperserver.url" value="http://172.24.12.203:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.user" value="jasperadmin"/>
+	<property name="ireport.jasperserver.report.resource" value="/rapports_PL/analyses/PL_109_Culture_Precedents"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="BDSOLDWH TEST"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<template><![CDATA["repo:/styles/PL_style_rapports"]]></template>
+	<style name="Crosstab Data Text" hTextAlign="Center" hImageAlign="Center"/>
+	<parameter name="p_millesime" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="schema_bdaplat_name" class="java.lang.String">
+		<defaultValueExpression><![CDATA["public"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FR_idutilisateur" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_cultures" class="java.util.List">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["C:\\Users\\aussarec49r\\Documents\\3.Developpements\\jrxml\\V1\\"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="P_culturesBioEtConv" class="java.lang.Integer" isForPrompting="false">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT
+	parc.iep_par_millesime AS millesime,
+	t1.libelletypeculture AS culture,
+	t1.idtypeculture,
+	typecult_prec AS precedent,
+	ROUND(SUM(parc.iep_par_surf)::numeric,1) AS sum_surf,
+	ROUND(SUM(COALESCE(parc.iep_par_rdtmoy,0) * COALESCE(parc.iep_par_surf,0))::numeric,1) AS sum_rec,
+	COUNT(parc.iep_idparcelleculturale)::integer AS nb_parcelles
+
+FROM	bdaplat.parcelles_$P!{p_millesime} parc
+	-- jointure sur la table des exploitations pour exp_statut et exp_depid
+	JOIN bdaplat.texploitations te ON (te.idexploitation = parc.iep_idexploitation)
+	-- jointure sur les types de cultures
+	LEFT JOIN (
+		SELECT	tcpt.*,ttc.codetypeculture,ttc.libelletypeculture,tu.identite FROM
+			bdanalysegroupe.cultures_par_type tcpt
+			JOIN bdanalysegroupe.type_culture ttc ON (ttc.idtypeculture=tcpt.idtypeculture)
+			JOIN bdanalysegroupe.tutilisateurs tu ON (tcpt.iddepartement=tu.identite)
+		WHERE
+			SUBSTRING(ttc.codetypeculture FROM 1 FOR 3) LIKE 'PL_'
+		AND idutilisateur=$P{FR_idutilisateur}
+	) t1 ON (t1.idculture=parc.iep_par_cultid)
+	-- auto jointure pour recuperer l'id du precedent
+	LEFT JOIN (
+		SELECT	DISTINCT iep_par_cultid AS idprec, iep_par_cultlibusage
+		FROM	bdaplat.parcelles_2010 parc2
+	) t3 ON (parc.iep_par_milprec_cultlibusage = t3.iep_par_cultlibusage)
+	-- jointure pour le type culture du precedent
+	LEFT JOIN (
+		SELECT	tcpt2.idculture,ttc2.libelletypeculture AS typecult_prec FROM
+			bdanalysegroupe.cultures_par_type tcpt2
+			JOIN bdanalysegroupe.type_culture ttc2 ON (ttc2.idtypeculture=tcpt2.idtypeculture)
+			JOIN bdanalysegroupe.tutilisateurs tu ON (tcpt2.iddepartement=tu.identite)
+		WHERE	SUBSTRING(ttc2.codetypeculture FROM 1 FOR 3) LIKE 'PL_'
+		AND	idutilisateur=$P{FR_idutilisateur}
+	) t2 ON (t2.idculture=t3.idprec)
+
+WHERE	-- critere sur les exploitations reelles
+	te.exp_statut IS NULL
+	-- critere departement
+AND	te.exp_depid= (SELECT identite FROM bdanalysegroupe.tutilisateurs WHERE idutilisateur=$P{FR_idutilisateur})
+	-- critere sur le millesime
+AND	parc.iep_ilo_millesime=$P{p_millesime}
+	-- critere sur les cultures selectionnees
+AND	$X{IN, CAST(t1.idtypeculture AS varchar), p_cultures}
+	-- critere rdt non null
+AND	((COALESCE(parc.iep_par_rdtmoy,0) * COALESCE(parc.iep_par_surf,0))/(parc.iep_par_surf)) BETWEEN 5
+AND	(SELECT tv.valeur_max FROM bdanalysegroupe.moduleverif_plage_valeurs tv WHERE tv.iddepartement=t1.identite AND	tv.idculture=parc.iep_par_cultid AND tv.type_critere='iep_par_rdtmoy')
+	-- critere surface >0
+AND	parc.iep_par_surf > 0
+	-- critère type de précédent non nul
+AND	typecult_prec IS NOT null
+	-- differenciation des cultures BIO et conventionnelles
+	AND	(parc.iep_par_bio =
+			(CASE WHEN $P{P_culturesBioEtConv} =1 THEN FALSE WHEN $P{P_culturesBioEtConv} = 2 THEN TRUE WHEN $P{P_culturesBioEtConv} =3 THEN TRUE END)
+		OR 	parc.iep_par_bio =
+			(CASE WHEN $P{P_culturesBioEtConv} =1 THEN FALSE WHEN $P{P_culturesBioEtConv} = 2 THEN TRUE WHEN $P{P_culturesBioEtConv} =3 THEN FALSE END)
+OR
+(CASE WHEN $P{P_culturesBioEtConv} =1 THEN parc.iep_par_bio  is null WHEN $P{P_culturesBioEtConv}= 3 THEN  parc.iep_par_bio  is null end))
+GROUP BY millesime, t1.libelletypeculture, t1.idtypeculture, t2.typecult_prec
+ORDER BY millesime, culture, sum_surf DESC]]>
+	</queryString>
+	<field name="millesime" class="java.lang.Integer"/>
+	<field name="culture" class="java.lang.String"/>
+	<field name="idtypeculture" class="java.lang.Integer"/>
+	<field name="precedent" class="java.lang.String"/>
+	<field name="sum_surf" class="java.math.BigDecimal"/>
+	<field name="sum_rec" class="java.math.BigDecimal"/>
+	<field name="nb_parcelles" class="java.lang.Integer"/>
+	<variable name="total_parcelles" class="java.lang.Integer" resetType="Group" resetGroup="gr_culture" calculation="Sum">
+		<variableExpression><![CDATA[$F{nb_parcelles}]]></variableExpression>
+	</variable>
+	<variable name="total_surf" class="java.lang.Double" resetType="Group" resetGroup="gr_culture" calculation="Sum">
+		<variableExpression><![CDATA[$F{sum_surf}]]></variableExpression>
+	</variable>
+	<variable name="som_rec" class="java.lang.Float" resetType="Group" resetGroup="gr_culture" calculation="Sum">
+		<variableExpression><![CDATA[$F{sum_rec}]]></variableExpression>
+	</variable>
+	<group name="gr_culture">
+		<groupExpression><![CDATA[$F{culture}]]></groupExpression>
+		<groupHeader>
+			<band height="40">
+				<textField>
+					<reportElement style="titre_edition" x="0" y="0" width="802" height="40" uuid="00a04669-7eab-4904-b359-fcf9c9ba96a8"/>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="none">
+						<font size="20" isBold="false"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Répartition des cultures précédentes sur "+$F{culture}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="445">
+				<textField pattern="###0 parcelle(s)">
+					<reportElement style="texte_defaut" isPrintRepeatedValues="false" x="584" y="21" width="200" height="20" uuid="f69b609e-604a-4e61-a477-0a2c7550c02e"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<pen lineStyle="Double" lineColor="#009F49"/>
+						<topPen lineWidth="1.0" lineStyle="Double" lineColor="#009F49"/>
+						<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineWidth="0.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{total_parcelles}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0 ha">
+					<reportElement style="texte_defaut" isPrintRepeatedValues="false" x="584" y="41" width="200" height="20" uuid="709fcfc6-264d-4b2a-9ba2-a8ea67472f98"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<pen lineStyle="Double" lineColor="#009F49"/>
+						<topPen lineWidth="0.0" lineStyle="Double" lineColor="#009F49"/>
+						<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineWidth="0.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{total_surf}]]></textFieldExpression>
+				</textField>
+				<textField pattern="">
+					<reportElement style="texte_defaut" isPrintRepeatedValues="false" x="584" y="60" width="200" height="20" uuid="9eb95674-b571-4f22-9875-40d2c1891256"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<pen lineStyle="Solid" lineColor="#009F49"/>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#009F49"/>
+						<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Rendement moyen "+Math.round($V{som_rec}/$V{total_surf})+ ($F{idtypeculture}<2000?" (q/ha)":" (tMS/ha)")]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="584" y="1" width="200" height="20" uuid="f2bbdcff-9328-4a86-9968-daecfad19dbf"/>
+					<box>
+						<pen lineStyle="Double" lineColor="#5BBF21"/>
+						<topPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="none">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Echantillon"]]></textFieldExpression>
+				</textField>
+				<pieChart>
+					<chart isShowLegend="false">
+						<reportElement x="0" y="41" width="550" height="351" uuid="f8afde65-2720-4bb6-8af6-1418e123fc64"/>
+						<box>
+							<topPen lineWidth="0.0"/>
+							<leftPen lineWidth="0.0"/>
+							<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+							<rightPen lineWidth="0.0"/>
+						</box>
+						<chartTitle/>
+						<chartSubtitle>
+							<font size="12"/>
+						</chartSubtitle>
+						<chartLegend position="Top"/>
+					</chart>
+					<pieDataset maxCount="10">
+						<dataset resetType="Group" resetGroup="gr_culture"/>
+						<keyExpression><![CDATA[$F{precedent}]]></keyExpression>
+						<valueExpression><![CDATA[$F{sum_surf}]]></valueExpression>
+						<otherLabelExpression><![CDATA["Autres"]]></otherLabelExpression>
+					</pieDataset>
+					<piePlot isShowLabels="true" labelFormat="{0}  ({2})" legendLabelFormat="">
+						<plot>
+							<seriesColor seriesOrder="0" color="#F1EB3B"/>
+							<seriesColor seriesOrder="1" color="#6B4F92"/>
+							<seriesColor seriesOrder="2" color="#89BF39"/>
+							<seriesColor seriesOrder="3" color="#D2474B"/>
+							<seriesColor seriesOrder="4" color="#41C9D7"/>
+							<seriesColor seriesOrder="5" color="#FF9900"/>
+							<seriesColor seriesOrder="6" color="#007A3F"/>
+							<seriesColor seriesOrder="7" color="#EE82C2"/>
+							<seriesColor seriesOrder="8" color="#4575EA"/>
+							<seriesColor seriesOrder="9" color="#CBC8AE"/>
+							<seriesColor seriesOrder="10" color="#04259F"/>
+						</plot>
+						<itemLabel/>
+					</piePlot>
+				</pieChart>
+				<subreport>
+					<reportElement x="584" y="91" width="200" height="100" isRemoveLineWhenBlank="true" uuid="779ad761-7cb8-42ce-8296-95fe0b662901"/>
+					<subreportParameter name="P_culturesBioEtConv">
+						<subreportParameterExpression><![CDATA[$P{P_culturesBioEtConv}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="schema_bdaplat_name">
+						<subreportParameterExpression><![CDATA[$P{schema_bdaplat_name}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="p_cultures">
+						<subreportParameterExpression><![CDATA[$F{idtypeculture}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="FR_idutilisateur">
+						<subreportParameterExpression><![CDATA[$P{FR_idutilisateur}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="p_millesime">
+						<subreportParameterExpression><![CDATA[$P{p_millesime}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression><![CDATA["repo:/rapports_PL/analyses/sub_PL_109_Rendement_Precedents"]]></subreportExpression>
+				</subreport>
+			</band>
+		</groupFooter>
+	</group>
+</jasperReport>

@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.2.0  -->
+<!-- 2017-11-15T16:26:33 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PL Global : SAU Répartition" language="groovy" pageWidth="802" pageHeight="515" orientation="Landscape" columnWidth="802" leftMargin="0" rightMargin="0" topMargin="30" bottomMargin="20" uuid="9dba54d0-b710-4f33-85ad-d775cfc71dd9">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.jasperserver.url" value="http://172.24.12.203:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.user" value="jasperadmin"/>
+	<property name="ireport.jasperserver.report.resource" value="/rapports_PL/analyses/PL_103_SAU_Repartition"/>
+	<template><![CDATA["repo:/styles/PL_style_rapports"]]></template>
+	<parameter name="p_millesime" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[2015]]></defaultValueExpression>
+	</parameter>
+	<parameter name="schema_bdaplat_name" class="java.lang.String">
+		<defaultValueExpression><![CDATA["public"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FR_idutilisateur" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="P_culturesBioEtConv" class="java.lang.Integer" isForPrompting="false">
+		<defaultValueExpression><![CDATA[1]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT
+	CASE
+		WHEN surface BETWEEN 0 and 40 THEN '01#0-40 ha'
+		WHEN surface BETWEEN 40 and 80 THEN '02#40-80 ha'
+		WHEN surface BETWEEN 80 and 120 THEN '03#80-120 ha'
+		WHEN surface BETWEEN 120 and 200 THEN '04#120-200 ha'
+		WHEN surface BETWEEN 200 and 300 THEN '05#200-300 ha'
+		WHEN surface >300 THEN '06#>300 ha'
+	END AS classe,
+	COUNT(idexploitation) AS nb_ea,
+	ROUND(SUM(surface)::numeric,1) AS SAU_cum,
+	ROUND(MIN(surface)::numeric,1) AS SAU_min,
+	ROUND(MAX(surface)::numeric,1) AS SAU_max,
+	ROUND(AVG(surface)::numeric,2)*COUNT(idexploitation) AS SAU_moy
+FROM
+	(SELECT parc.iep_idexploitation AS idexploitation,
+		SUM(COALESCE(parc.iep_par_surf,0)) AS surface
+	FROM	bdaplat.ptparcelles parc
+	-- jointure pour exp_statut et exp_depid
+	JOIN	bdaplat.texploitations expl ON (expl.idexploitation = parc.iep_idexploitation)
+	WHERE
+		-- critere exploitation réelle
+		expl.exp_statut IS NULL
+		-- critere departement
+	AND	expl.exp_depid= (SELECT identite FROM bdanalysegroupe.tutilisateurs WHERE idutilisateur=$P{FR_idutilisateur})
+		-- critere sur le millesime
+	AND	parc.iep_ilo_millesime=$P!{p_millesime}
+		-- differenciation cultures BIO et conventionnelles
+	AND	(parc.iep_par_bio =
+			(CASE WHEN $P{P_culturesBioEtConv} =1 THEN FALSE WHEN $P{P_culturesBioEtConv} = 2 THEN TRUE WHEN $P{P_culturesBioEtConv} =3 THEN TRUE END)
+		OR 	parc.iep_par_bio =
+			(CASE WHEN $P{P_culturesBioEtConv} =1 THEN FALSE WHEN $P{P_culturesBioEtConv} = 2 THEN TRUE WHEN $P{P_culturesBioEtConv} =3 THEN FALSE END)
+OR
+(CASE WHEN $P{P_culturesBioEtConv}= 1 THEN  parc.iep_par_bio  is null
+WHEN $P{P_culturesBioEtConv}= 3 THEN  parc.iep_par_bio  is null end))
+	GROUP BY parc.iep_idexploitation
+	) req
+GROUP BY classe
+ORDER BY classe]]>
+	</queryString>
+	<field name="classe" class="java.lang.String"/>
+	<field name="nb_ea" class="java.lang.Long"/>
+	<field name="sau_cum" class="java.math.BigDecimal"/>
+	<field name="sau_min" class="java.math.BigDecimal"/>
+	<field name="sau_max" class="java.math.BigDecimal"/>
+	<field name="sau_moy" class="java.math.BigDecimal"/>
+	<variable name="nb_exploitations" class="java.lang.Float" calculation="Sum">
+		<variableExpression><![CDATA[$F{nb_ea}]]></variableExpression>
+	</variable>
+	<variable name="SAU_totale" class="java.lang.Float" calculation="Sum">
+		<variableExpression><![CDATA[$F{sau_cum}]]></variableExpression>
+	</variable>
+	<variable name="SAU_min" class="java.lang.Float" calculation="Lowest">
+		<variableExpression><![CDATA[$F{sau_min}]]></variableExpression>
+	</variable>
+	<variable name="SAU_max" class="java.lang.Float" calculation="Highest">
+		<variableExpression><![CDATA[$F{sau_max}]]></variableExpression>
+	</variable>
+	<variable name="SAU_moy" class="java.lang.Float" calculation="Sum">
+		<variableExpression><![CDATA[$F{sau_moy}]]></variableExpression>
+	</variable>
+	<title>
+		<band height="40" splitType="Stretch">
+			<textField>
+				<reportElement style="titre_edition" x="0" y="0" width="802" height="40" uuid="42b45a88-97f0-4060-bfd2-d0cccfc2a865"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font size="20"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Répartition des exploitations par classe de SAU"]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<summary>
+		<band height="425">
+			<barChart>
+				<chart isShowLegend="false">
+					<reportElement x="36" y="65" width="730" height="360" forecolor="#000000" uuid="e884d6ac-0d62-4d70-a353-f3013780f50d"/>
+					<chartTitle/>
+					<chartSubtitle/>
+					<chartLegend/>
+				</chart>
+				<categoryDataset>
+					<categorySeries>
+						<seriesExpression><![CDATA["SAU"]]></seriesExpression>
+						<categoryExpression><![CDATA[$F{classe}.split('#')[1]]]></categoryExpression>
+						<valueExpression><![CDATA[$F{nb_ea}]]></valueExpression>
+						<labelExpression><![CDATA[$F{nb_ea}+""]]></labelExpression>
+					</categorySeries>
+				</categoryDataset>
+				<barPlot isShowLabels="true">
+					<plot labelRotation="0.0">
+						<seriesColor seriesOrder="0" color="#00338D"/>
+					</plot>
+					<itemLabel color="#00338D">
+						<font size="12"/>
+					</itemLabel>
+					<categoryAxisFormat labelRotation="0.0">
+						<axisFormat labelColor="#000000">
+							<labelFont>
+								<font size="10" isBold="true"/>
+							</labelFont>
+							<tickLabelFont>
+								<font size="12"/>
+							</tickLabelFont>
+						</axisFormat>
+					</categoryAxisFormat>
+					<valueAxisLabelExpression><![CDATA["Nombre d'exploitations"]]></valueAxisLabelExpression>
+					<valueAxisFormat>
+						<axisFormat labelColor="#00338D">
+							<labelFont>
+								<font size="12"/>
+							</labelFont>
+						</axisFormat>
+					</valueAxisFormat>
+				</barPlot>
+			</barChart>
+			<textField pattern=" #,##0 exploitations">
+				<reportElement style="texte_defaut" stretchType="RelativeToTallestObject" x="446" y="14" width="160" height="20" uuid="19510ca9-3fb2-4fd8-a4de-ea5ba85a36eb"/>
+				<box leftPadding="2" rightPadding="2">
+					<pen lineStyle="Double" lineColor="#009F49"/>
+					<topPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double" lineColor="#5BBF21"/>
+					<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{nb_exploitations}]]></textFieldExpression>
+			</textField>
+			<textField pattern="SAU moyenne : #,##0.0 ha">
+				<reportElement style="texte_defaut" stretchType="RelativeToTallestObject" x="446" y="34" width="160" height="20" uuid="60478e54-9e4d-4321-b6ce-ba1cf6baad0a"/>
+				<box leftPadding="2" rightPadding="2">
+					<pen lineStyle="Double" lineColor="#009F49"/>
+					<topPen lineWidth="0.0" lineStyle="Double" lineColor="#5BBF21"/>
+					<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					<bottomPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[($V{SAU_moy}/$V{nb_exploitations})]]></textFieldExpression>
+			</textField>
+			<textField pattern="SAU minimum : #,##0 ha">
+				<reportElement style="texte_defaut" stretchType="RelativeToTallestObject" x="606" y="14" width="160" height="20" uuid="25ddb447-8cb9-464b-a6d5-d57f75efcda9"/>
+				<box leftPadding="2" rightPadding="2">
+					<pen lineStyle="Double" lineColor="#009F49"/>
+					<topPen lineWidth="1.0" lineStyle="Double" lineColor="#5BBF21"/>
+					<leftPen lineWidth="1.0" lineStyle="Double" lineColor="#5BBF21"/>
+					<bottomPen lineWidth="0.0" lineStyle="Double" lineColor="#5BBF21"/>
+					<rightPen lineWidth="1.0" lineStyle="Double" lineColor="#5BBF21"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{SAU_min}]]></textFieldExpression>
+			</textField>
+			<textField pattern="SAU maximum : #,##0 ha">
+				<reportElement style="texte_defaut" stretchType="RelativeToTallestObject" x="606" y="34" width="160" height="20" uuid="3cae5f6b-1b31-4290-9c04-6b9edb5c1563"/>
+				<box leftPadding="2" rightPadding="2">
+					<pen lineStyle="Double" lineColor="#009F49"/>
+					<topPen lineWidth="0.0" lineStyle="Double" lineColor="#5BBF21"/>
+					<leftPen lineWidth="1.0" lineStyle="Double" lineColor="#5BBF21"/>
+					<bottomPen lineWidth="1.0" lineStyle="Double" lineColor="#5BBF21"/>
+					<rightPen lineWidth="1.0" lineStyle="Double" lineColor="#5BBF21"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{SAU_max}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>

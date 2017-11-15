@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.2.0  -->
+<!-- 2017-11-15T16:28:38 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PL_Globale_CultureTypeSol" language="groovy" pageWidth="802" pageHeight="515" orientation="Landscape" columnWidth="802" leftMargin="0" rightMargin="0" topMargin="30" bottomMargin="20" uuid="2098096b-cdaf-4121-875a-b366ad371dc6">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.jasperserver.url" value="http://172.24.12.203:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.user" value="jasperadmin"/>
+	<property name="ireport.jasperserver.report.resource" value="/rapports_PL/analyses/PL_114_Culture_Irrigation"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="BDSOLDWH TEST"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<template><![CDATA["repo:/styles/PL_style_rapports"]]></template>
+	<parameter name="p_millesime" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[2013]]></defaultValueExpression>
+	</parameter>
+	<parameter name="schema_bdaplat_name" class="java.lang.String">
+		<defaultValueExpression><![CDATA["public"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FR_idutilisateur" class="java.lang.Integer"/>
+	<parameter name="p_cultures" class="java.util.List">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="P_culturesBioEtConv" class="java.lang.Integer" isForPrompting="false">
+		<defaultValueExpression><![CDATA[1]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT
+	parc.iep_ilo_millesime AS millesime,
+	t1.libelletypeculture AS culture,
+	t1.idtypeculture,
+	CASE
+		WHEN parc.culture_irriguee =true THEN 'irrigué'
+		ELSE 'non irrigué'
+	END AS irrigation,
+	ROUND(SUM(parc.iep_par_surf)::numeric,1) AS sum_surf,
+	ROUND((SUM(parc.iep_par_rdtmoy*parc.iep_par_surf)/SUM(parc.iep_par_surf))::numeric,2) AS rdt_moy,
+	ROUND(STDDEV_POP(parc.iep_par_rdtmoy)::numeric,2) AS rdt_et,
+	COUNT(parc.iep_idparcelleculturale)::integer AS nb_parcelles
+
+FROM	bdaplat.parcelles_$P!{p_millesime} parc
+	-- jointure sur la table des exploitations pour exp_statut et exp_depid
+JOIN	bdaplat.texploitations te ON (te.idexploitation = parc.iep_idexploitation)
+	-- jointure sur les types de cultures
+LEFT JOIN (
+	SELECT	tcpt.*,ttc.codetypeculture,ttc.libelletypeculture,tu.identite
+	FROM	bdanalysegroupe.cultures_par_type tcpt
+	JOIN	bdanalysegroupe.type_culture ttc ON (ttc.idtypeculture=tcpt.idtypeculture)
+	JOIN	bdanalysegroupe.tutilisateurs tu ON (tcpt.iddepartement=tu.identite)
+	WHERE
+		SUBSTRING(ttc.codetypeculture FROM 1 FOR 3) LIKE 'PL_'
+	AND	tu.idutilisateur=$P{FR_idutilisateur}
+	) t1 ON (t1.idculture=parc.iep_par_cultid)
+
+WHERE
+	-- critere sur les exploitations reelles
+	te.exp_statut IS NULL
+	-- critere departement
+AND	te.exp_depid= (SELECT identite FROM bdanalysegroupe.tutilisateurs WHERE idutilisateur=$P{FR_idutilisateur})
+	-- critere sur le millesime
+AND	parc.iep_ilo_millesime=$P{p_millesime}
+	-- critere sur les cultures selectionnees
+AND	$X{IN, CAST(t1.idtypeculture AS varchar), p_cultures}
+	-- critere rdt valide
+AND	parc.iep_par_rdtmoy BETWEEN 5
+		AND (SELECT tv.valeur_max FROM bdanalysegroupe.moduleverif_plage_valeurs tv WHERE tv.iddepartement=t1.identite AND tv.idculture=parc.iep_par_cultid AND tv.type_critere='iep_par_rdtmoy')
+	-- critere surface >0
+AND	parc.iep_par_surf > 0
+	-- differenciation des cultures BIO et conventionnelles
+AND 	(parc.iep_par_bio =
+(case when $P{P_culturesBioEtConv} =1 then false when $P{P_culturesBioEtConv} = 2 then true when $P{P_culturesBioEtConv} =3 then true end)
+OR 	parc.iep_par_bio =
+(case when $P{P_culturesBioEtConv} =1 then false when $P{P_culturesBioEtConv} = 2 then true when $P{P_culturesBioEtConv} =3 then false end)
+or
+(CASE WHEN $P{P_culturesBioEtConv} =1 THEN parc.iep_par_bio  is null WHEN $P{P_culturesBioEtConv}= 3 THEN  parc.iep_par_bio  is null end)
+
+)
+
+
+GROUP BY millesime, t1.libelletypeculture, t1.idtypeculture, CASE WHEN parc.culture_irriguee =true THEN 'irrigué' ELSE 'non irrigué' END
+ORDER BY millesime, culture, sum_surf DESC]]>
+	</queryString>
+	<field name="millesime" class="java.lang.Integer"/>
+	<field name="culture" class="java.lang.String"/>
+	<field name="idtypeculture" class="java.lang.Integer"/>
+	<field name="irrigation" class="java.lang.String"/>
+	<field name="sum_surf" class="java.math.BigDecimal"/>
+	<field name="rdt_moy" class="java.math.BigDecimal"/>
+	<field name="rdt_et" class="java.math.BigDecimal"/>
+	<field name="nb_parcelles" class="java.lang.Integer"/>
+	<variable name="total_parcelles" class="java.lang.Integer" resetType="Group" resetGroup="gr_culture" calculation="Sum">
+		<variableExpression><![CDATA[$F{nb_parcelles}]]></variableExpression>
+	</variable>
+	<variable name="total_surf" class="java.lang.Double" resetType="Group" resetGroup="gr_culture" calculation="Sum">
+		<variableExpression><![CDATA[$F{sum_surf}]]></variableExpression>
+	</variable>
+	<variable name="som_rdtXsurf" class="java.lang.Float" resetType="Group" resetGroup="gr_culture" calculation="Sum">
+		<variableExpression><![CDATA[$F{rdt_moy}*$F{sum_surf}]]></variableExpression>
+	</variable>
+	<group name="gr_culture" isStartNewPage="true" isReprintHeaderOnEachPage="true">
+		<groupExpression><![CDATA[$F{culture}]]></groupExpression>
+		<groupHeader>
+			<band height="100">
+				<textField>
+					<reportElement style="titre_edition" x="0" y="10" width="802" height="40" uuid="1efb91d5-c279-4049-add7-3544dcd7a4f5"/>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="none">
+						<font size="20" isBold="false"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Irrigation sur "+$F{culture}]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="480" y="50" width="100" height="50" forecolor="#009139" uuid="7aa425c6-b47c-41d2-922a-70d84f5064b7"/>
+					<box>
+						<bottomPen lineWidth="1.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement verticalAlignment="Middle" markup="none">
+						<font size="12" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Rendement moyen "+($F{idtypeculture}<2000?"(q/ha)":"(tMS/ha)")]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="80" y="50" width="200" height="50" forecolor="#009139" uuid="97df3318-c4b8-4496-a6df-971cf64e7762"/>
+					<box>
+						<bottomPen lineWidth="1.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Irrigation]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="280" y="50" width="100" height="50" forecolor="#009139" uuid="c85e4bb6-9b9c-4f85-a997-a88470beff97"/>
+					<box>
+						<bottomPen lineWidth="1.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Nombre de parcelles]]></text>
+				</staticText>
+				<staticText>
+					<reportElement x="380" y="50" width="100" height="50" forecolor="#009139" uuid="6ff5db35-5d99-43f8-bf1a-a0b6dec64531"/>
+					<box>
+						<bottomPen lineWidth="1.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+					</textElement>
+					<text><![CDATA[Surface (ha)]]></text>
+				</staticText>
+				<textField>
+					<reportElement x="580" y="50" width="100" height="50" forecolor="#009139" uuid="880f72b5-7bbb-4745-a797-5168f6527a4c"/>
+					<box>
+						<bottomPen lineWidth="1.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement verticalAlignment="Middle" markup="none">
+						<font size="12" isBold="true"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Ecart-type de rendement\n"+($F{idtypeculture}<2000?"(q/ha)":"(tMS/ha)")]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="20">
+				<staticText>
+					<reportElement x="80" y="0" width="200" height="20" forecolor="#009139" uuid="0707a7f1-9a88-48e7-8283-98d69b6abef1"/>
+					<box>
+						<pen lineStyle="Double" lineColor="#5BBF21"/>
+						<topPen lineWidth="1.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<leftPen lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineWidth="0.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="12" isBold="true"/>
+					</textElement>
+					<text><![CDATA[TOTAL / MOYENNE]]></text>
+				</staticText>
+				<textField pattern="#,##0">
+					<reportElement x="280" y="0" width="100" height="20" forecolor="#009139" uuid="7102a4b2-b21f-4985-a990-4e74b08a1469"/>
+					<box>
+						<pen lineStyle="Double" lineColor="#5BBF21"/>
+						<topPen lineWidth="1.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<leftPen lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineWidth="0.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{total_parcelles}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0">
+					<reportElement x="380" y="0" width="100" height="20" forecolor="#009139" uuid="7f9b83b6-c855-4888-a3d3-3ee0301bdd49"/>
+					<box>
+						<pen lineStyle="Double" lineColor="#5BBF21"/>
+						<topPen lineWidth="1.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<leftPen lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineWidth="0.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{total_surf}]]></textFieldExpression>
+				</textField>
+				<textField pattern="###0.0">
+					<reportElement x="480" y="0" width="100" height="20" forecolor="#009139" uuid="a5ec1814-392f-497e-859f-71dc020eaa1e"/>
+					<box>
+						<pen lineStyle="Double" lineColor="#5BBF21"/>
+						<topPen lineWidth="1.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<leftPen lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineWidth="0.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{som_rdtXsurf}/$V{total_surf}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupFooter>
+	</group>
+	<detail>
+		<band height="21">
+			<textField>
+				<reportElement x="280" y="0" width="100" height="20" uuid="f121bc53-6e7e-4372-b202-e22ea9ee8d0b"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{nb_parcelles}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="380" y="0" width="100" height="20" uuid="66ac0dc5-e1a4-46b4-a946-585c5c913ddf"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{sum_surf}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="480" y="0" width="100" height="20" uuid="7218d28e-d6ca-450f-a90c-f1f3d267790f"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{rdt_moy}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="580" y="0" width="100" height="20" uuid="d08d81fd-0ca7-47c1-ab87-214b8971dafe"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{rdt_et}]]></textFieldExpression>
+			</textField>
+			<textField>
+				<reportElement x="80" y="1" width="200" height="20" uuid="3175a5fd-deda-4731-8e29-4a2f29c4d1f5"/>
+				<textElement verticalAlignment="Middle"/>
+				<textFieldExpression><![CDATA[$F{irrigation}]]></textFieldExpression>
+			</textField>
+		</band>
+	</detail>
+</jasperReport>

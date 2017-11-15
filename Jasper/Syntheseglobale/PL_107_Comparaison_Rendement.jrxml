@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.2.0  -->
+<!-- 2017-11-15T16:26:44 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PL_Global_ComparRdt" language="groovy" pageWidth="802" pageHeight="515" orientation="Landscape" columnWidth="802" leftMargin="0" rightMargin="0" topMargin="30" bottomMargin="20" uuid="c5b71d15-ed20-4683-9638-0aeff1696619">
+	<property name="ireport.zoom" value="1.5"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.jasperserver.url" value="http://172.24.12.203:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.user" value="jasperadmin"/>
+	<property name="ireport.jasperserver.report.resource" value="/rapports_PL/analyses/PL_107_Comparaison_Rendement"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="BDSOLDWH PROD"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<template><![CDATA["repo:/styles/PL_style_rapports"]]></template>
+	<parameter name="p_millesime" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="schema_bdaplat_name" class="java.lang.String">
+		<defaultValueExpression><![CDATA["public"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FR_idutilisateur" class="java.lang.Integer"/>
+	<parameter name="p_cultures" class="java.util.List"/>
+	<parameter name="P_culturesBioEtConv" class="java.lang.Integer" isForPrompting="false">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT
+	parc.iep_ilo_millesime AS millesime,
+	t1.libelletypeculture AS culture,
+	t1.idtypeculture,
+	SUM(parc.iep_par_rdtmoy * parc.iep_par_surf)/SUM(parc.iep_par_surf) AS rendement
+FROM	bdaplat.ptparcelles parc
+	-- jointure sur la table des exploitations pour exp_statut et exp_depid
+JOIN	bdaplat.texploitations te ON (te.idexploitation = parc.iep_idexploitation)
+	-- jointure sur les types de cultures
+LEFT JOIN (
+	SELECT	tcpt.*,ttc.codetypeculture,ttc.libelletypeculture,tu.identite
+	FROM	bdanalysegroupe.cultures_par_type tcpt
+	JOIN	bdanalysegroupe.type_culture ttc ON (ttc.idtypeculture=tcpt.idtypeculture)
+	JOIN	bdanalysegroupe.tutilisateurs tu ON (tcpt.iddepartement=tu.identite)
+	WHERE	SUBSTRING(ttc.codetypeculture FROM 1 FOR 3) LIKE 'PL_'
+	AND	tu.idutilisateur=$P{FR_idutilisateur}
+	) t1 ON (t1.idculture=parc.iep_par_cultid)
+
+WHERE
+	-- critere sur les exploitations reelles
+	te.exp_statut IS NULL
+	-- critere departement
+AND	te.exp_depid= (SELECT identite FROM bdanalysegroupe.tutilisateurs WHERE idutilisateur=$P{FR_idutilisateur})
+	-- critere sur les 3 millesimes pecedant le millesime selectionne
+AND	(parc.iep_ilo_millesime between $P{p_millesime}-2 and $P{p_millesime})
+	-- critere sur les cultures selectionnees
+AND	$X{IN, CAST(t1.idtypeculture AS varchar), p_cultures}
+	-- critere sur rendement valide
+AND	(parc.iep_par_rdtmoy BETWEEN 5	AND (SELECT tv.valeur_max FROM bdanalysegroupe.moduleverif_plage_valeurs tv WHERE tv.iddepartement=t1.identite AND tv.idculture=parc.iep_par_cultid AND tv.type_critere='iep_par_rdtmoy'))
+	-- critere surface >0
+AND 	parc.iep_par_surf > 0
+	-- differenciation des types de culture
+	AND	(parc.iep_par_bio =
+			(CASE WHEN $P{P_culturesBioEtConv} =1 THEN FALSE WHEN $P{P_culturesBioEtConv} = 2 THEN TRUE WHEN $P{P_culturesBioEtConv} =3 THEN TRUE END)
+		OR 	parc.iep_par_bio =
+			(CASE WHEN $P{P_culturesBioEtConv} =1 THEN FALSE WHEN $P{P_culturesBioEtConv} = 2 THEN TRUE WHEN $P{P_culturesBioEtConv} =3 THEN FALSE END)
+OR
+(CASE WHEN $P{P_culturesBioEtConv} =1 THEN parc.iep_par_bio  is null WHEN $P{P_culturesBioEtConv}= 3 THEN  parc.iep_par_bio  is null end))
+GROUP BY	millesime, culture, idtypeculture
+ORDER BY	idtypeculture,millesime]]>
+	</queryString>
+	<field name="millesime" class="java.lang.Integer"/>
+	<field name="culture" class="java.lang.String"/>
+	<field name="idtypeculture" class="java.lang.Integer"/>
+	<field name="rendement" class="java.lang.Double"/>
+	<variable name="max" class="java.lang.Double" calculation="Highest">
+		<variableExpression><![CDATA[$F{rendement}]]></variableExpression>
+	</variable>
+	<variable name="min" class="java.lang.Double" calculation="Lowest">
+		<variableExpression><![CDATA[$F{rendement}]]></variableExpression>
+	</variable>
+	<title>
+		<band height="40">
+			<staticText>
+				<reportElement style="titre_edition" x="0" y="0" width="802" height="40" uuid="1c82d80f-db18-43b3-be14-c236e2233319"/>
+				<textElement textAlignment="Center" verticalAlignment="Top" markup="none">
+					<font size="20" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Comparaison et évolution des rendements]]></text>
+			</staticText>
+		</band>
+	</title>
+	<summary>
+		<band height="425" splitType="Stretch">
+			<multiAxisChart>
+				<chart>
+					<reportElement x="0" y="20" width="802" height="400" isPrintWhenDetailOverflows="true" uuid="cedfd850-ec99-4af6-a1c8-4ddb9bb4ea7e"/>
+					<chartTitle/>
+					<chartSubtitle/>
+					<chartLegend position="Right">
+						<font size="12"/>
+					</chartLegend>
+				</chart>
+				<multiAxisPlot>
+					<plot>
+						<seriesColor seriesOrder="0" color="#9BBB59"/>
+						<seriesColor seriesOrder="1" color="#4F81BD"/>
+						<seriesColor seriesOrder="2" color="#C0504D"/>
+					</plot>
+					<axis position="leftOrTop">
+						<barChart>
+							<chart>
+								<reportElement x="0" y="0" width="0" height="0" backcolor="#FFFFFF" uuid="17419d8b-fa88-45af-94c3-d3518bea18be"/>
+								<chartTitle color="#000000"/>
+								<chartSubtitle color="#000000"/>
+								<chartLegend textColor="#000000" backgroundColor="#FFFFFF" position="Right">
+									<font size="12"/>
+								</chartLegend>
+							</chart>
+							<categoryDataset>
+								<categorySeries>
+									<seriesExpression><![CDATA[$F{millesime}]]></seriesExpression>
+									<categoryExpression><![CDATA[($F{idtypeculture}<2000)?($F{culture}+" (q/ha)"):($F{culture}+" (tMS/ha)")]]></categoryExpression>
+									<valueExpression><![CDATA[$F{rendement}]]></valueExpression>
+									<labelExpression><![CDATA[(Math.round($F{rendement}*10)/10)+""]]></labelExpression>
+								</categorySeries>
+							</categoryDataset>
+							<barPlot isShowLabels="true" isShowTickLabels="true" isShowTickMarks="true">
+								<plot labelRotation="-45.0">
+									<seriesColor seriesOrder="0" color="#009139"/>
+									<seriesColor seriesOrder="1" color="#89BF39"/>
+									<seriesColor seriesOrder="2" color="#F1EB3B"/>
+								</plot>
+								<itemLabel>
+									<font size="10"/>
+								</itemLabel>
+								<categoryAxisFormat labelRotation="-45.0">
+									<axisFormat>
+										<tickLabelFont>
+											<font size="12"/>
+										</tickLabelFont>
+									</axisFormat>
+								</categoryAxisFormat>
+								<valueAxisLabelExpression><![CDATA["(U récolte/ha)"]]></valueAxisLabelExpression>
+								<valueAxisFormat>
+									<axisFormat>
+										<labelFont>
+											<font size="12"/>
+										</labelFont>
+										<tickLabelFont>
+											<font size="10"/>
+										</tickLabelFont>
+									</axisFormat>
+								</valueAxisFormat>
+								<rangeAxisMinValueExpression><![CDATA[$V{min}>0 ? $V{min}-0.1*$V{min} : $V{min}+0.1*$V{min}]]></rangeAxisMinValueExpression>
+								<rangeAxisMaxValueExpression><![CDATA[$V{max}+(0.10*$V{max})]]></rangeAxisMaxValueExpression>
+							</barPlot>
+						</barChart>
+					</axis>
+				</multiAxisPlot>
+			</multiAxisChart>
+		</band>
+	</summary>
+</jasperReport>

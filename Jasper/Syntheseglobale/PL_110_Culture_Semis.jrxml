@@ -1,0 +1,327 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.2.0  -->
+<!-- 2017-11-15T16:26:44 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PL_Globale_CultureDateSemis" language="groovy" pageWidth="802" pageHeight="515" orientation="Landscape" columnWidth="802" leftMargin="0" rightMargin="0" topMargin="30" bottomMargin="0" uuid="1e570b78-47e1-4eab-959c-aa58fadd080f">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.jasperserver.url" value="http://172.24.12.203:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.user" value="jasperadmin"/>
+	<property name="ireport.jasperserver.report.resource" value="/rapports_PL/analyses/PL_110_Culture_Semis"/>
+	<template><![CDATA["repo:/styles/PL_style_rapports"]]></template>
+	<parameter name="p_millesime" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[2013]]></defaultValueExpression>
+	</parameter>
+	<parameter name="schema_bdaplat_name" class="java.lang.String">
+		<defaultValueExpression><![CDATA["public"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FR_idutilisateur" class="java.lang.Integer"/>
+	<parameter name="p_cultures" class="java.util.List">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="P_culturesBioEtConv" class="java.lang.Integer" isForPrompting="false">
+		<defaultValueExpression><![CDATA[1]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT	*,
+	ROUND((sum_surf*100/(SUM(sum_surf) OVER(PARTITION BY culture)))::numeric,1) AS pourcent_surf,
+	CASE WHEN date_semis LIKE 'avant' THEN 1
+		WHEN date_semis LIKE 'après' THEN 3
+		ELSE 2
+	END AS ordre
+FROM (
+	-- sous-requete req
+	SELECT
+		millesime,
+		culture,
+		idtypeculture,
+		date_semis,
+		SUM(rdt_moy*surface)/SUM(surface) AS rdt_moy,
+		SUM(surface) AS sum_surf,
+		COUNT(idparcelle) AS nb_parcelles
+
+	FROM (
+	-- sous-selection pour les rendements vérifiés : req_verif
+		SELECT
+			parc.iep_ilo_millesime AS millesime,
+			t1.libelletypeculture AS culture,
+			t1.idtypeculture,
+			parc.iep_par_rdtmoy AS rdt_moy,
+		-- verification du semis
+		CASE
+			WHEN t2.date_semis < (SELECT EXTRACT(WEEK FROM date_min) FROM bdanalysegroupe.moduleverif_plage_dates td
+				WHERE (td.iddepartement=t1.identite AND td.idculture=parc.iep_par_cultid AND td.type_interv='semis') LIMIT 1)
+			THEN 'avant'
+			WHEN t2.date_semis BETWEEN (SELECT EXTRACT(WEEK FROM date_min) FROM bdanalysegroupe.moduleverif_plage_dates td
+					WHERE (td.iddepartement=t1.identite AND td.idculture=parc.iep_par_cultid AND td.type_interv='semis') LIMIT 1)
+				AND (SELECT EXTRACT(WEEK FROM date_max) FROM bdanalysegroupe.moduleverif_plage_dates td
+					WHERE (td.iddepartement=t1.identite AND td.idculture=parc.iep_par_cultid AND td.type_interv='semis') LIMIT 1)
+			THEN CAST(t2.date_semis AS text)
+			WHEN t2.date_semis > (SELECT EXTRACT(WEEK FROM date_max) FROM bdanalysegroupe.moduleverif_plage_dates td
+					WHERE (td.iddepartement=t1.identite AND td.idculture=parc.iep_par_cultid AND td.type_interv='semis') LIMIT 1)
+			THEN 'après'
+		ELSE NULL
+		END AS date_semis,
+		parc.iep_par_surf AS surface,
+		parc.iep_idparcelleculturale AS idparcelle
+
+		FROM	bdaplat.parcelles_$P!{p_millesime} parc
+			-- jointure sur la table des exploitations pour exp_statut et exp_depid
+		JOIN	bdaplat.texploitations te ON (te.idexploitation = parc.iep_idexploitation)
+			-- jointure sur les types de cultures
+		LEFT JOIN (
+			SELECT	tcpt.*,ttc.codetypeculture,ttc.libelletypeculture,tu.identite FROM
+				bdanalysegroupe.cultures_par_type tcpt
+			JOIN	bdanalysegroupe.type_culture ttc ON (ttc.idtypeculture=tcpt.idtypeculture)
+			JOIN	bdanalysegroupe.tutilisateurs tu ON (tcpt.iddepartement=tu.identite)
+			WHERE	SUBSTRING(ttc.codetypeculture FROM 1 FOR 3) LIKE 'PL_'
+			AND	tu.idutilisateur=$P{FR_idutilisateur}
+		) t1 ON (t1.idculture=parc.iep_par_cultid)
+			-- jointure sur les interventions de type semis
+		LEFT JOIN (
+			SELECT	idparcelleculturale, eve_millesime,
+			MIN(EXTRACT(WEEK FROM eve_debut)) AS date_semis
+			FROM	bdaplat.interventions_$P!{p_millesime}
+			--critere sur les interventions semis plantation realisees sauf cipan
+			WHERE	eve_intervregroupid=9 AND eve_etat=1 AND eve_typeid<>235
+			AND	eve_millesime=$P{p_millesime}
+			GROUP BY idparcelleculturale, eve_millesime
+		) t2 ON (parc.iep_idparcelleculturale=t2.idparcelleculturale AND parc.iep_ilo_millesime=t2.eve_millesime)
+
+		WHERE
+			-- critere sur les exploitations reelles
+			te.exp_statut IS NULL
+			-- critere departement
+		AND	te.exp_depid= (SELECT identite FROM	bdanalysegroupe.tutilisateurs WHERE idutilisateur=$P{FR_idutilisateur})
+			-- critere sur le millesime
+		AND	parc.iep_ilo_millesime=$P{p_millesime}
+			-- critere sur les cultures selectionnees
+		AND	$X{IN, CAST(t1.idtypeculture AS varchar), p_cultures}
+			-- critere rdt valide
+		AND	parc.iep_par_rdtmoy BETWEEN 5
+		AND	(SELECT tv.valeur_max FROM bdanalysegroupe.moduleverif_plage_valeurs tv WHERE tv.iddepartement=t1.identite AND tv.idculture=parc.iep_par_cultid AND tv.type_critere='iep_par_rdtmoy')
+		-- critere date de semis renseignee
+		AND	t2.date_semis IS NOT NULL
+	-- differenciation des cultures BIO et conventionnelles
+	AND	(parc.iep_par_bio =
+			(CASE WHEN $P{P_culturesBioEtConv} =1 THEN FALSE WHEN $P{P_culturesBioEtConv} = 2 THEN TRUE WHEN $P{P_culturesBioEtConv} =3 THEN TRUE END)
+		OR 	parc.iep_par_bio =
+			(CASE WHEN $P{P_culturesBioEtConv} =1 THEN FALSE WHEN $P{P_culturesBioEtConv} = 2 THEN TRUE WHEN $P{P_culturesBioEtConv} =3 THEN FALSE END)
+OR
+(CASE WHEN $P{P_culturesBioEtConv} =1 THEN parc.iep_par_bio  is null WHEN $P{P_culturesBioEtConv}= 3 THEN  parc.iep_par_bio  is null end))
+
+	) req_verif
+
+WHERE
+	-- critere rdt non null
+	rdt_moy IS NOT NULL
+	-- critere surface >0
+AND	surface > 0
+	-- critere date de semis renseignee
+AND	date_semis IS NOT NULL
+
+GROUP BY millesime,culture, idtypeculture, date_semis
+) req
+ORDER BY millesime, culture, ordre, date_semis]]>
+	</queryString>
+	<field name="millesime" class="java.lang.Integer"/>
+	<field name="culture" class="java.lang.String"/>
+	<field name="idtypeculture" class="java.lang.Integer"/>
+	<field name="date_semis" class="java.lang.String"/>
+	<field name="rdt_moy" class="java.lang.Double"/>
+	<field name="sum_surf" class="java.lang.Double"/>
+	<field name="nb_parcelles" class="java.lang.Long"/>
+	<field name="pourcent_surf" class="java.math.BigDecimal"/>
+	<field name="ordre" class="java.lang.Integer"/>
+	<variable name="total_parcelles" class="java.lang.Integer" resetType="Group" resetGroup="gr_culture" calculation="Sum">
+		<variableExpression><![CDATA[$F{nb_parcelles}]]></variableExpression>
+	</variable>
+	<variable name="total_surf" class="java.lang.Double" resetType="Group" resetGroup="gr_culture" calculation="Sum">
+		<variableExpression><![CDATA[$F{sum_surf}]]></variableExpression>
+	</variable>
+	<variable name="som_rdtXsurf" class="java.lang.Float" resetType="Group" resetGroup="gr_culture" calculation="Sum">
+		<variableExpression><![CDATA[$F{rdt_moy}*$F{sum_surf}]]></variableExpression>
+	</variable>
+	<group name="gr_culture">
+		<groupExpression><![CDATA[$F{culture}]]></groupExpression>
+		<groupHeader>
+			<band height="40">
+				<textField>
+					<reportElement style="titre_edition" x="0" y="0" width="802" height="40" uuid="77f5d97e-bfbd-4034-8db3-8ac9af984588"/>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="none">
+						<font size="20" isBold="false"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Date de semis sur "+$F{culture}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="445">
+				<multiAxisChart>
+					<chart isShowLegend="false">
+						<reportElement x="2" y="80" width="763" height="365" isPrintWhenDetailOverflows="true" uuid="032a51ac-9bf8-436a-87ea-974950268ef6"/>
+						<box>
+							<pen lineColor="#999999"/>
+							<topPen lineWidth="0.0" lineColor="#999999"/>
+							<leftPen lineWidth="0.0" lineColor="#999999"/>
+							<bottomPen lineWidth="0.0" lineColor="#999999"/>
+							<rightPen lineWidth="0.0" lineColor="#999999"/>
+						</box>
+						<chartTitle/>
+						<chartSubtitle/>
+						<chartLegend position="Right">
+							<font size="12"/>
+						</chartLegend>
+					</chart>
+					<multiAxisPlot>
+						<plot/>
+						<axis position="rightOrBottom">
+							<lineChart>
+								<chart isShowLegend="false">
+									<reportElement x="0" y="0" width="0" height="0" backcolor="#FFFFFF" uuid="37a123f8-1da3-4de8-8ba4-c01046726bce"/>
+									<chartTitle color="#000000"/>
+									<chartSubtitle color="#000000"/>
+									<chartLegend textColor="#000000" backgroundColor="#FFFFFF" position="Right">
+										<font size="12"/>
+									</chartLegend>
+								</chart>
+								<categoryDataset>
+									<dataset resetType="Group" resetGroup="gr_culture"/>
+									<categorySeries>
+										<seriesExpression><![CDATA[$F{millesime}]]></seriesExpression>
+										<categoryExpression><![CDATA[$F{date_semis}]]></categoryExpression>
+										<valueExpression><![CDATA[$F{rdt_moy}]]></valueExpression>
+									</categorySeries>
+								</categoryDataset>
+								<linePlot>
+									<plot>
+										<seriesColor seriesOrder="0" color="#91132E"/>
+									</plot>
+									<categoryAxisLabelExpression><![CDATA["Semaine de semis"]]></categoryAxisLabelExpression>
+									<categoryAxisFormat>
+										<axisFormat>
+											<labelFont>
+												<font size="12"/>
+											</labelFont>
+										</axisFormat>
+									</categoryAxisFormat>
+									<valueAxisLabelExpression><![CDATA["Rendement moyen "+($F{idtypeculture}<2000?"(q/ha)":"(tMS/ha)")]]></valueAxisLabelExpression>
+									<valueAxisFormat>
+										<axisFormat labelColor="#91132E" tickLabelColor="#91132E" axisLineColor="#91132E">
+											<labelFont>
+												<font size="12" isBold="true"/>
+											</labelFont>
+										</axisFormat>
+									</valueAxisFormat>
+								</linePlot>
+							</lineChart>
+						</axis>
+						<axis position="leftOrTop">
+							<barChart>
+								<chart isShowLegend="false">
+									<reportElement x="0" y="0" width="0" height="0" forecolor="#755418" backcolor="#FFFFFF" uuid="54741f58-7741-447a-ac34-1889533fbd9b"/>
+									<chartTitle color="#000000"/>
+									<chartSubtitle color="#000000"/>
+									<chartLegend textColor="#000000" backgroundColor="#FFFFFF" position="Right">
+										<font size="12"/>
+									</chartLegend>
+								</chart>
+								<categoryDataset>
+									<dataset resetType="Group" resetGroup="gr_culture"/>
+									<categorySeries>
+										<seriesExpression><![CDATA[$F{millesime}]]></seriesExpression>
+										<categoryExpression><![CDATA[$F{date_semis}]]></categoryExpression>
+										<valueExpression><![CDATA[$F{pourcent_surf}]]></valueExpression>
+										<labelExpression><![CDATA[$F{pourcent_surf}+" %"]]></labelExpression>
+									</categorySeries>
+								</categoryDataset>
+								<barPlot isShowLabels="true" isShowTickLabels="true" isShowTickMarks="true">
+									<plot labelRotation="0.0">
+										<seriesColor seriesOrder="0" color="#C59217"/>
+										<seriesColor seriesOrder="1" color="#4F81BD"/>
+										<seriesColor seriesOrder="2" color="#C0504D"/>
+									</plot>
+									<itemLabel/>
+									<categoryAxisFormat labelRotation="0.0">
+										<axisFormat labelColor="#333333" tickLabelColor="#755418" axisLineColor="#755418">
+											<tickLabelFont>
+												<font size="12"/>
+											</tickLabelFont>
+										</axisFormat>
+									</categoryAxisFormat>
+									<valueAxisLabelExpression><![CDATA["Proportion de surface cultivée (%)"]]></valueAxisLabelExpression>
+									<valueAxisFormat>
+										<axisFormat labelColor="#755418" tickLabelColor="#755418" verticalTickLabels="false" axisLineColor="#755418">
+											<labelFont>
+												<font size="12" isBold="true"/>
+											</labelFont>
+											<tickLabelFont>
+												<font size="8"/>
+											</tickLabelFont>
+										</axisFormat>
+									</valueAxisFormat>
+								</barPlot>
+							</barChart>
+						</axis>
+					</multiAxisPlot>
+				</multiAxisChart>
+				<textField pattern="###0 parcelle(s)">
+					<reportElement style="texte_defaut" isPrintRepeatedValues="false" x="301" y="22" width="200" height="20" uuid="895cbb3e-9b6c-4957-b491-79a52d29a7ad"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<pen lineStyle="Double" lineColor="#009F49"/>
+						<topPen lineWidth="1.0" lineStyle="Double" lineColor="#009F49"/>
+						<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineWidth="0.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{total_parcelles}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0 ha">
+					<reportElement style="texte_defaut" isPrintRepeatedValues="false" x="301" y="42" width="200" height="20" uuid="b772af17-035d-418b-b99a-37464ddcd9b9"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<pen lineStyle="Double" lineColor="#009F49"/>
+						<topPen lineWidth="0.0" lineStyle="Double" lineColor="#009F49"/>
+						<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineWidth="0.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{total_surf}]]></textFieldExpression>
+				</textField>
+				<textField pattern="">
+					<reportElement style="texte_defaut" isPrintRepeatedValues="false" x="301" y="61" width="200" height="20" uuid="186c615d-8633-4fda-bfbc-c3d8bea49104"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<pen lineStyle="Solid" lineColor="#009F49"/>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#009F49"/>
+						<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Rendement moyen "+Math.round($V{som_rdtXsurf}/$V{total_surf})+($F{idtypeculture}<2000?" (q/ha)":" (tMS/ha)")]]></textFieldExpression>
+				</textField>
+				<textField>
+					<reportElement x="301" y="2" width="200" height="20" uuid="c4d8e4cb-d33c-4147-bec3-84986b74ef4a"/>
+					<box>
+						<pen lineStyle="Double" lineColor="#5BBF21"/>
+						<topPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle" markup="none">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Echantillon"]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupFooter>
+	</group>
+</jasperReport>

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.2.0  -->
+<!-- 2017-11-15T16:29:09 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PL_Global_Evolution_Comparaison_Surf" language="groovy" pageWidth="802" pageHeight="515" orientation="Landscape" columnWidth="802" leftMargin="0" rightMargin="0" topMargin="30" bottomMargin="20" uuid="4c09662c-e6d8-4b6b-bc4e-25c0840387b8">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.jasperserver.url" value="http://172.24.12.203:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.user" value="jasperadmin"/>
+	<property name="ireport.jasperserver.report.resource" value="/rapports_PL/analyses/PL_122_Evolution_Cultures"/>
+	<template><![CDATA["repo:/styles/PL_style_rapports"]]></template>
+	<parameter name="p_millesime" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="schema_bdaplat_name" class="java.lang.String">
+		<defaultValueExpression><![CDATA["public"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FR_idutilisateur" class="java.lang.Integer"/>
+	<parameter name="p_cultures" class="java.util.List"/>
+	<parameter name="P_culturesBioEtConv" class="java.lang.Integer" isForPrompting="false">
+		<defaultValueExpression><![CDATA[1]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT
+	parc.iep_ilo_millesime AS millesime,
+	t1.libelletypeculture AS culture,
+	t1.idtypeculture,
+	SUM(parc.iep_par_surf) AS surface
+
+FROM	bdaplat.ptparcelles parc
+	-- jointure sur la table des exploitations
+	JOIN bdaplat.texploitations te ON (te.idexploitation = parc.iep_idexploitation)
+	-- jointure sur les types de cultures
+	LEFT JOIN (
+		SELECT	tcpt.*,ttc.codetypeculture,ttc.libelletypeculture,tu.identite
+		FROM	bdanalysegroupe.cultures_par_type tcpt
+		JOIN	bdanalysegroupe.type_culture ttc ON (ttc.idtypeculture=tcpt.idtypeculture)
+		JOIN	bdanalysegroupe.tutilisateurs tu ON (tcpt.iddepartement=tu.identite)
+		WHERE	SUBSTRING(ttc.codetypeculture FROM 1 FOR 3) LIKE 'PL_'
+		AND	tu.idutilisateur=$P{FR_idutilisateur}
+	) t1 ON (t1.idculture=parc.iep_par_cultid)
+WHERE
+	-- critere sur les exploitations reelles
+	te.exp_statut IS NULL
+	-- critere departement
+AND	te.exp_depid= (SELECT identite FROM bdanalysegroupe.tutilisateurs WHERE idutilisateur=$P{FR_idutilisateur})
+	-- critere sur le millesime
+AND	parc.iep_ilo_millesime <= $P{p_millesime}
+AND	$P{p_millesime} - 5 < parc.iep_ilo_millesime
+	-- critere sur les cultures selectionnees
+AND	$X{IN, CAST(t1.idtypeculture AS varchar), p_cultures}
+	-- critere surface > 0
+AND 	parc.iep_par_surf > 0
+	-- differenciation des cultures BIO et conventionnelles
+	AND	(parc.iep_par_bio =
+			(CASE WHEN $P{P_culturesBioEtConv} =1 THEN FALSE WHEN $P{P_culturesBioEtConv} = 2 THEN TRUE WHEN $P{P_culturesBioEtConv} =3 THEN TRUE END)
+		OR 	parc.iep_par_bio =
+			(CASE WHEN $P{P_culturesBioEtConv} =1 THEN FALSE WHEN $P{P_culturesBioEtConv} = 2 THEN TRUE WHEN $P{P_culturesBioEtConv} =3 THEN FALSE END)
+OR
+(CASE WHEN $P{P_culturesBioEtConv}= 1 THEN  parc.iep_par_bio  is null
+WHEN $P{P_culturesBioEtConv}= 3 THEN  parc.iep_par_bio  is null end))
+
+GROUP BY culture, idtypeculture, millesime
+ORDER BY millesime ,idtypeculture ASC]]>
+	</queryString>
+	<field name="millesime" class="java.lang.Integer"/>
+	<field name="culture" class="java.lang.String"/>
+	<field name="idtypeculture" class="java.lang.Integer"/>
+	<field name="surface" class="java.lang.Double"/>
+	<title>
+		<band height="40">
+			<staticText>
+				<reportElement style="titre_edition" x="0" y="0" width="802" height="40" uuid="279cc2d5-1f60-42a9-afb2-5d7090e28c4c"/>
+				<textElement textAlignment="Center" verticalAlignment="Top" markup="none">
+					<font size="20" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Comparaison et évolution des surfaces]]></text>
+			</staticText>
+		</band>
+	</title>
+	<summary>
+		<band height="425" splitType="Stretch">
+			<barChart>
+				<chart>
+					<reportElement x="0" y="0" width="802" height="425" uuid="f2260acd-bd36-4b31-b165-f5e156718cfc"/>
+					<chartTitle/>
+					<chartSubtitle/>
+					<chartLegend position="Right"/>
+				</chart>
+				<categoryDataset>
+					<categorySeries>
+						<seriesExpression><![CDATA[$F{millesime}]]></seriesExpression>
+						<categoryExpression><![CDATA[$F{culture}]]></categoryExpression>
+						<valueExpression><![CDATA[$F{surface}]]></valueExpression>
+						<labelExpression><![CDATA[(Math.round($F{surface}))+""]]></labelExpression>
+					</categorySeries>
+				</categoryDataset>
+				<barPlot isShowLabels="false" isShowTickLabels="true" isShowTickMarks="true">
+					<plot labelRotation="-45.0">
+						<seriesColor seriesOrder="0" color="#00338D"/>
+						<seriesColor seriesOrder="1" color="#4575EA"/>
+						<seriesColor seriesOrder="2" color="#41C9D7"/>
+						<seriesColor seriesOrder="3" color="#CBC8AE"/>
+						<seriesColor seriesOrder="4" color="#666666"/>
+						<seriesColor seriesOrder="5" color="#D2474B"/>
+					</plot>
+					<itemLabel color="#000000"/>
+					<categoryAxisFormat labelRotation="-45.0">
+						<axisFormat/>
+					</categoryAxisFormat>
+					<valueAxisLabelExpression><![CDATA["Surface (en ha)"]]></valueAxisLabelExpression>
+					<valueAxisFormat>
+						<axisFormat/>
+					</valueAxisFormat>
+				</barPlot>
+			</barChart>
+		</band>
+	</summary>
+</jasperReport>

@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.2.0  -->
+<!-- 2017-11-15T16:26:35 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PL Globa : SAU Evolution" language="groovy" pageWidth="802" pageHeight="515" orientation="Landscape" columnWidth="802" leftMargin="0" rightMargin="0" topMargin="30" bottomMargin="20" uuid="725270db-58b5-4144-9fe0-dc11079804d8">
+	<property name="ireport.zoom" value="0.7513148009015791"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.jasperserver.url" value="http://172.24.12.203:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.user" value="jasperadmin"/>
+	<property name="ireport.jasperserver.report.resource" value="/rapports_PL/analyses/PL_104_SAU_Evolution"/>
+	<template><![CDATA["repo:/styles/PL_style_rapports"]]></template>
+	<style name="table">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1">
+		<box>
+			<pen lineWidth="1.0" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_TH" mode="Opaque" backcolor="#F0F8FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_CH" mode="Opaque" backcolor="#BFE1FF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<style name="table 1_TD" mode="Opaque" backcolor="#FFFFFF">
+		<box>
+			<pen lineWidth="0.5" lineColor="#000000"/>
+		</box>
+	</style>
+	<parameter name="p_millesime" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="schema_bdaplat_name" class="java.lang.String">
+		<defaultValueExpression><![CDATA["public"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FR_idutilisateur" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="SUBREPORT_DIR" class="java.lang.String" isForPrompting="false">
+		<defaultValueExpression><![CDATA["C:\\Users\\aussarec49r\\Documents\\3.Developpements\\jrxml\\Etat104-SAUMoy_evolution\\"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="P_culturesBioEtConv" class="java.lang.Integer" isForPrompting="false">
+		<defaultValueExpression><![CDATA[1]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT
+	millesime,
+	ROUND(AVG(surface)::numeric,2) AS sau_moy,
+	count(id_exploitations) AS nb_exploitations
+FROM
+	(SELECT 	parc.iep_idexploitation AS id_exploitations,
+		parc.iep_ilo_millesime AS millesime,
+		SUM(parc.iep_par_surf) AS surface
+	FROM 	bdaplat.ptparcelles parc
+		-- jointure pour exp_statut et exp_depid
+		JOIN bdaplat.texploitations expl ON (expl.idexploitation = parc.iep_idexploitation)
+	WHERE
+		-- critere exploitation réelle
+		expl.exp_statut IS NULL
+		-- critere departement
+	AND	expl.exp_depid = (SELECT identite FROM bdanalysegroupe.tutilisateurs WHERE idutilisateur=$P{FR_idutilisateur})
+		-- critere sur les 5 annees precedant le millesime choisi
+	AND	parc.iep_ilo_millesime <= $P!{p_millesime}
+	AND	$P!{p_millesime}-5 < parc.iep_ilo_millesime
+		-- differenciation des cultures BIO et conventionnelles
+	AND	(parc.iep_par_bio =
+			(CASE WHEN $P{P_culturesBioEtConv} =1 THEN FALSE WHEN $P{P_culturesBioEtConv} = 2 THEN TRUE WHEN $P{P_culturesBioEtConv} =3 THEN TRUE END)
+		OR 	parc.iep_par_bio =
+			(CASE WHEN $P{P_culturesBioEtConv} =1 THEN FALSE WHEN $P{P_culturesBioEtConv} = 2 THEN TRUE WHEN $P{P_culturesBioEtConv} =3 THEN FALSE END)
+OR
+(CASE WHEN $P{P_culturesBioEtConv}= 1 THEN  parc.iep_par_bio  is null
+WHEN $P{P_culturesBioEtConv}= 3 THEN  parc.iep_par_bio  is null end))
+	GROUP BY parc.iep_idexploitation, parc.iep_ilo_millesime
+	) req
+GROUP BY millesime
+ORDER BY millesime]]>
+	</queryString>
+	<field name="millesime" class="java.lang.Integer"/>
+	<field name="sau_moy" class="java.math.BigDecimal"/>
+	<field name="nb_exploitations" class="java.lang.Long"/>
+	<variable name="MAX_SAU_moy" class="java.lang.Float" calculation="Highest">
+		<variableExpression><![CDATA[$F{sau_moy}]]></variableExpression>
+	</variable>
+	<title>
+		<band height="40" splitType="Stretch">
+			<textField>
+				<reportElement style="titre_edition" x="0" y="0" width="802" height="40" uuid="89d1713a-0275-4ff5-b2f9-ee51a550f4cc"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font size="20"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Evolution de la SAU moyenne des exploitations"]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<summary>
+		<band height="375">
+			<lineChart>
+				<chart isShowLegend="false" customizerClass="com.atolcd.jasper.craal.charts.IFTLabeledLineChart">
+					<reportElement mode="Transparent" x="29" y="36" width="500" height="314" isRemoveLineWhenBlank="true" isPrintInFirstWholeBand="true" isPrintWhenDetailOverflows="true" uuid="69b432aa-22d2-4629-92bc-930c28954a71"/>
+					<chartTitle/>
+					<chartSubtitle/>
+					<chartLegend/>
+				</chart>
+				<categoryDataset>
+					<categorySeries>
+						<seriesExpression><![CDATA["SAU moy"]]></seriesExpression>
+						<categoryExpression><![CDATA[$F{millesime}]]></categoryExpression>
+						<valueExpression><![CDATA[$F{sau_moy}]]></valueExpression>
+					</categorySeries>
+				</categoryDataset>
+				<linePlot isShowLines="true" isShowShapes="true">
+					<plot labelRotation="0.0">
+						<seriesColor seriesOrder="0" color="#00A9E0"/>
+					</plot>
+					<categoryAxisLabelExpression><![CDATA[]]></categoryAxisLabelExpression>
+					<categoryAxisFormat labelRotation="0.0">
+						<axisFormat verticalTickLabels="true">
+							<tickLabelFont>
+								<font size="12"/>
+							</tickLabelFont>
+						</axisFormat>
+					</categoryAxisFormat>
+					<valueAxisLabelExpression><![CDATA["SAU moyenne (ha)"]]></valueAxisLabelExpression>
+					<valueAxisFormat>
+						<axisFormat verticalTickLabels="false">
+							<labelFont>
+								<font size="12"/>
+							</labelFont>
+						</axisFormat>
+					</valueAxisFormat>
+					<rangeAxisMinValueExpression><![CDATA[50]]></rangeAxisMinValueExpression>
+					<rangeAxisMaxValueExpression><![CDATA[((($V{MAX_SAU_moy}/10).intValue()+1.5)*10).intValue()+10]]></rangeAxisMaxValueExpression>
+				</linePlot>
+			</lineChart>
+			<subreport>
+				<reportElement x="572" y="135" width="200" height="100" uuid="d9b56d51-284e-4584-9a38-0c6423769e95"/>
+				<subreportParameter name="P_culturesBioEtConv">
+					<subreportParameterExpression><![CDATA[$P{P_culturesBioEtConv}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="schema_bdaplat_name">
+					<subreportParameterExpression><![CDATA[$P{schema_bdaplat_name}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="FR_idutilisateur">
+					<subreportParameterExpression><![CDATA[$P{FR_idutilisateur}]]></subreportParameterExpression>
+				</subreportParameter>
+				<subreportParameter name="p_millesime">
+					<subreportParameterExpression><![CDATA[$P{p_millesime}]]></subreportParameterExpression>
+				</subreportParameter>
+				<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+				<subreportExpression><![CDATA["repo:/rapports_PL/analyses/sub_PL_104_TableauSAUtot"]]></subreportExpression>
+			</subreport>
+		</band>
+	</summary>
+</jasperReport>

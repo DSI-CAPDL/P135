@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.2.0  -->
+<!-- 2017-11-15T16:26:30 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PL Global : AssolementAn" language="groovy" pageWidth="802" pageHeight="515" orientation="Landscape" columnWidth="802" leftMargin="0" rightMargin="0" topMargin="30" bottomMargin="20" uuid="2c04ec69-c054-4d27-bc1f-63da34fe2694">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.jasperserver.url" value="http://172.24.12.203:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.user" value="jasperadmin"/>
+	<property name="ireport.jasperserver.report.resource" value="/rapports_PL/analyses/PL_102_AssolementGlobal"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="BDSOLDWH PROD"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
+	<template><![CDATA["repo:/styles/PL_style_rapports"]]></template>
+	<parameter name="p_millesime" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="schema_bdaplat_name" class="java.lang.String">
+		<defaultValueExpression><![CDATA["bdaplat"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FR_idutilisateur" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="P_culturesBioEtConv" class="java.lang.Integer" isForPrompting="false">
+		<defaultValueExpression><![CDATA[1]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT	ROUND(SUM(parc.iep_par_surf)::numeric,0) AS surface,
+	-- declaration des classes de cultures
+	CASE
+		-- ventilation des prairies
+		WHEN (parc.iep_par_cultcoderpg LIKE 'PPH') OR (parc.iep_par_cultcoderpg LIKE 'PN') THEN 'prairies permanentes'
+		WHEN (parc.iep_par_cultcoderpg LIKE 'PTR') OR (parc.iep_par_cultcoderpg LIKE 'PT') THEN 'prairies temporaires'
+		WHEN (parc.iep_par_cultcoderpg LIKE 'PRL') OR (parc.iep_par_cultcoderpg LIKE 'PX') THEN 'prairies temporaires + 5 ans'
+		-- autres cultures
+		ELSE t1.libelletypeculture
+		END AS culture
+-- requête sur la table millesimee issue de ptparcelles
+FROM bdaplat.parcelles_$P!{p_millesime} parc
+	-- jointure gauche sur les types des cultures pour le dept de l'utilisateur
+	LEFT JOIN (
+		SELECT	tcpt.*,ttc.*
+		FROM	bdanalysegroupe.cultures_par_type tcpt
+			JOIN bdanalysegroupe.type_culture ttc ON (ttc.idtypeculture=tcpt.idtypeculture)
+			JOIN bdanalysegroupe.tutilisateurs tu ON (tcpt.iddepartement=tu.identite)
+		WHERE
+			SUBSTRING(ttc.codetypeculture FROM 1 FOR 3) LIKE 'PL_'
+			AND tu.idutilisateur=$P{FR_idutilisateur}
+		) t1 ON (t1.idculture=parc.iep_par_cultid)
+	-- jointure pour exp_statut et exp_depid
+	JOIN	bdaplat.texploitations expl ON (parc.iep_idexploitation=expl.idexploitation)
+
+WHERE
+	-- type de culture identifié
+	t1.libelletypeculture IS NOT NULL
+AND	-- critere exploitation réelle
+	expl.exp_statut IS NULL
+	and iep_par_cultprincipale is true 
+	
+	-- critere departement
+AND	expl.exp_depid= (SELECT identite FROM bdanalysegroupe.tutilisateurs WHERE idutilisateur=$P{FR_idutilisateur})
+	-- differenciation des cultures BIO et conventionnelles
+	AND	(parc.iep_par_bio =
+			(CASE WHEN $P{P_culturesBioEtConv} =1 THEN FALSE WHEN $P{P_culturesBioEtConv} = 2 THEN TRUE WHEN $P{P_culturesBioEtConv} =3 THEN TRUE END)
+		OR 	parc.iep_par_bio =
+			(CASE WHEN $P{P_culturesBioEtConv} =1 THEN FALSE WHEN $P{P_culturesBioEtConv} = 2 THEN TRUE WHEN $P{P_culturesBioEtConv} =3 THEN FALSE END)
+OR
+(CASE WHEN $P{P_culturesBioEtConv} =1 THEN parc.iep_par_bio  is null WHEN $P{P_culturesBioEtConv}= 3 THEN  parc.iep_par_bio  is null end))
+
+GROUP BY culture
+ORDER BY surface DESC]]>
+	</queryString>
+	<field name="surface" class="java.math.BigDecimal"/>
+	<field name="culture" class="java.lang.String"/>
+	<variable name="SAU_tot" class="java.lang.Number" calculation="Sum">
+		<variableExpression><![CDATA[$F{surface}]]></variableExpression>
+	</variable>
+	<title>
+		<band height="40" splitType="Stretch">
+			<textField>
+				<reportElement style="titre_edition" x="0" y="0" width="802" height="40" uuid="1b8ae293-66b7-4fc6-8ead-07ee0b803973"/>
+				<textElement textAlignment="Center" verticalAlignment="Top">
+					<font size="20"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Assolement global pour l'année "+$P{p_millesime}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<summary>
+		<band height="425">
+			<pieChart>
+				<chart isShowLegend="false">
+					<reportElement x="1" y="12" width="730" height="400" uuid="1ed819ab-84ae-4727-828d-6c11777d3753"/>
+					<box>
+						<topPen lineWidth="0.0"/>
+						<leftPen lineWidth="0.0"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid"/>
+						<rightPen lineWidth="0.0"/>
+					</box>
+					<chartTitle/>
+					<chartSubtitle>
+						<font size="12"/>
+					</chartSubtitle>
+					<chartLegend position="Top"/>
+				</chart>
+				<pieDataset maxCount="10">
+					<keyExpression><![CDATA[$F{culture}]]></keyExpression>
+					<valueExpression><![CDATA[$F{surface}]]></valueExpression>
+					<otherLabelExpression><![CDATA["Autres"]]></otherLabelExpression>
+				</pieDataset>
+				<piePlot isShowLabels="true" isCircular="true" labelFormat="{0} : {1} ha ({2})" legendLabelFormat="">
+					<plot>
+						<seriesColor seriesOrder="0" color="#4572A7"/>
+						<seriesColor seriesOrder="1" color="#AA4643"/>
+						<seriesColor seriesOrder="2" color="#89A54E"/>
+						<seriesColor seriesOrder="3" color="#9B89A7"/>
+						<seriesColor seriesOrder="4" color="#4198AF"/>
+						<seriesColor seriesOrder="5" color="#DB843D"/>
+						<seriesColor seriesOrder="6" color="#93A9CF"/>
+						<seriesColor seriesOrder="7" color="#D19392"/>
+						<seriesColor seriesOrder="8" color="#CCCC14"/>
+						<seriesColor seriesOrder="9" color="#FFCC99"/>
+						<seriesColor seriesOrder="10" color="#FFCC33"/>
+					</plot>
+					<itemLabel/>
+				</piePlot>
+			</pieChart>
+			<textField pattern="SAU totale : #,##0 ha">
+				<reportElement style="texte_defaut" stretchType="RelativeToTallestObject" x="571" y="33" width="160" height="20" uuid="90709593-d50c-4647-ac9d-29ea1d697176"/>
+				<box leftPadding="2" rightPadding="2">
+					<pen lineStyle="Double" lineColor="#009F49"/>
+					<topPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					<bottomPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+				</box>
+				<textElement textAlignment="Right" verticalAlignment="Middle">
+					<font size="12"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$V{SAU_tot}]]></textFieldExpression>
+			</textField>
+		</band>
+	</summary>
+</jasperReport>
