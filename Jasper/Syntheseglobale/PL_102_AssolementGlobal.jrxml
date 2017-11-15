@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.2.0  -->
-<!-- 2017-11-15T16:26:30 -->
+<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.3.1  -->
+<!-- 2017-11-15T16:47:46 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PL Global : AssolementAn" language="groovy" pageWidth="802" pageHeight="515" orientation="Landscape" columnWidth="802" leftMargin="0" rightMargin="0" topMargin="30" bottomMargin="20" uuid="2c04ec69-c054-4d27-bc1f-63da34fe2694">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
@@ -26,21 +26,69 @@
 		<defaultValueExpression><![CDATA[1]]></defaultValueExpression>
 	</parameter>
 	<queryString>
-		<![CDATA[SELECT	ROUND(SUM(parc.iep_par_surf)::numeric,0) AS surface,
+		<![CDATA[select sum(t.surface) as surface,case when culture10.surface is not null then t.culture else 'Autres'  end as culture--, culture10.surface
+from (SELECT	ROUND(SUM(parc.iep_par_surf)::numeric,0) AS surface,-- iep_par_cultid ,iep_par_cultlibusage, iep_par_cultcoderpg ,
 	-- declaration des classes de cultures
 	CASE
 		-- ventilation des prairies
 		WHEN (parc.iep_par_cultcoderpg LIKE 'PPH') OR (parc.iep_par_cultcoderpg LIKE 'PN') THEN 'prairies permanentes'
 		WHEN (parc.iep_par_cultcoderpg LIKE 'PTR') OR (parc.iep_par_cultcoderpg LIKE 'PT') THEN 'prairies temporaires'
 		WHEN (parc.iep_par_cultcoderpg LIKE 'PRL') OR (parc.iep_par_cultcoderpg LIKE 'PX') THEN 'prairies temporaires + 5 ans'
+		when t1.idtypeculture=2000 then 'prairies indifférenciées'
 		-- autres cultures
-		ELSE t1.libelletypeculture
+		when  t1.libelletypeculture is not null then   t1.libelletypeculture
+		else 'Autres'
+		END AS culture
+-- requête sur la table millesimee issue de ptparcelles
+FROM bdaplat.parcelles_$P!{p_millesime} parc
+
+	-- jointure gauche sur les types des cultures pour le dept de l'utilisateur
+	LEFT JOIN (
+		SELECT	tcpt.*,ttc.codetypeculture, ttc.libelletypeculture
+		FROM	bdanalysegroupe.cultures_par_type tcpt
+			JOIN bdanalysegroupe.type_culture ttc ON (ttc.idtypeculture=tcpt.idtypeculture)
+			JOIN bdanalysegroupe.tutilisateurs tu ON (tcpt.iddepartement=tu.identite)
+		WHERE
+			SUBSTRING(ttc.codetypeculture FROM 1 FOR 3) LIKE 'PL_'
+			AND tu.idutilisateur=$P{FR_idutilisateur}
+		) t1 ON (t1.idculture=parc.iep_par_cultid)
+	-- jointure pour exp_statut et exp_depid
+	JOIN	bdaplat.texploitations expl ON (parc.iep_idexploitation=expl.idexploitation)
+
+WHERE
+	-- type de culture identifié
+	--t1.libelletypeculture IS NOT NULL
+--AND	-- critere exploitation réelle
+	expl.exp_statut IS NULL
+	AND	expl.exp_depid= (SELECT identite FROM bdanalysegroupe.tutilisateurs WHERE idutilisateur=$P{FR_idutilisateur})
+
+and iep_par_cultid is not null
+and iep_par_cultprincipale is true 
+	AND	(parc.iep_par_bio =
+			(CASE WHEN $P{P_culturesBioEtConv} =1 THEN FALSE WHEN $P{P_culturesBioEtConv} = 2 THEN TRUE WHEN $P{P_culturesBioEtConv} =3 THEN TRUE END)
+		OR 	parc.iep_par_bio =
+			(CASE WHEN $P{P_culturesBioEtConv} =1 THEN FALSE WHEN $P{P_culturesBioEtConv} = 2 THEN TRUE WHEN $P{P_culturesBioEtConv} =3 THEN FALSE END)
+OR
+(CASE WHEN $P{P_culturesBioEtConv} =1 THEN parc.iep_par_bio  is null WHEN $P{P_culturesBioEtConv}= 3 THEN  parc.iep_par_bio  is null end))
+GROUP BY culture
+ORDER BY surface DESC) t
+left join (SELECT	ROUND(SUM(parc.iep_par_surf)::numeric,0) AS surface,
+	-- declaration des classes de cultures
+	CASE
+		-- ventilation des prairies
+		WHEN (parc.iep_par_cultcoderpg LIKE 'PPH') OR (parc.iep_par_cultcoderpg LIKE 'PN') THEN 'prairies permanentes'
+		WHEN (parc.iep_par_cultcoderpg LIKE 'PTR') OR (parc.iep_par_cultcoderpg LIKE 'PT') THEN 'prairies temporaires'
+		WHEN (parc.iep_par_cultcoderpg LIKE 'PRL') OR (parc.iep_par_cultcoderpg LIKE 'PX') THEN 'prairies temporaires + 5 ans'
+		when t1.idtypeculture=2000 then 'prairies indifférenciées'
+		-- autres cultures
+		when  t1.libelletypeculture is not null then   t1.libelletypeculture
+		else 'Autres'
 		END AS culture
 -- requête sur la table millesimee issue de ptparcelles
 FROM bdaplat.parcelles_$P!{p_millesime} parc
 	-- jointure gauche sur les types des cultures pour le dept de l'utilisateur
 	LEFT JOIN (
-		SELECT	tcpt.*,ttc.*
+		SELECT	tcpt.*,ttc.codetypeculture, ttc.libelletypeculture
 		FROM	bdanalysegroupe.cultures_par_type tcpt
 			JOIN bdanalysegroupe.type_culture ttc ON (ttc.idtypeculture=tcpt.idtypeculture)
 			JOIN bdanalysegroupe.tutilisateurs tu ON (tcpt.iddepartement=tu.identite)
@@ -54,21 +102,22 @@ FROM bdaplat.parcelles_$P!{p_millesime} parc
 WHERE
 	-- type de culture identifié
 	t1.libelletypeculture IS NOT NULL
+	AND	expl.exp_depid= (SELECT identite FROM bdanalysegroupe.tutilisateurs WHERE idutilisateur=$P{FR_idutilisateur})
 AND	-- critere exploitation réelle
 	expl.exp_statut IS NULL
-	and iep_par_cultprincipale is true 
-	
-	-- critere departement
-AND	expl.exp_depid= (SELECT identite FROM bdanalysegroupe.tutilisateurs WHERE idutilisateur=$P{FR_idutilisateur})
-	-- differenciation des cultures BIO et conventionnelles
+
+and iep_par_cultid is not null
+and iep_par_cultprincipale is true 
 	AND	(parc.iep_par_bio =
 			(CASE WHEN $P{P_culturesBioEtConv} =1 THEN FALSE WHEN $P{P_culturesBioEtConv} = 2 THEN TRUE WHEN $P{P_culturesBioEtConv} =3 THEN TRUE END)
 		OR 	parc.iep_par_bio =
 			(CASE WHEN $P{P_culturesBioEtConv} =1 THEN FALSE WHEN $P{P_culturesBioEtConv} = 2 THEN TRUE WHEN $P{P_culturesBioEtConv} =3 THEN FALSE END)
 OR
 (CASE WHEN $P{P_culturesBioEtConv} =1 THEN parc.iep_par_bio  is null WHEN $P{P_culturesBioEtConv}= 3 THEN  parc.iep_par_bio  is null end))
-
 GROUP BY culture
+ORDER BY surface DESC
+limit 10) culture10 on culture10.culture = t.culture
+GROUP BY case when culture10.surface is not null then t.culture else 'Autres'  end
 ORDER BY surface DESC]]>
 	</queryString>
 	<field name="surface" class="java.math.BigDecimal"/>
