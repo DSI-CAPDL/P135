@@ -1,0 +1,200 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.2.0  -->
+<!-- 2017-11-15T16:15:13 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="CoverPageGroupe" language="groovy" pageWidth="842" pageHeight="595" orientation="Landscape" columnWidth="842" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" isTitleNewPage="true" uuid="7137dd5d-54c9-425d-be65-23498ca4f7c1">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.jasperserver.reportUnit" value="/rapports_PL/synthese_groupe"/>
+	<property name="ireport.jasperserver.url" value="http://172.24.12.203:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.user" value="jasperadmin"/>
+	<property name="ireport.jasperserver.report.resource" value="/rapports_PL/synthese_groupe_files/synthese_groupe_jrxml"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="BDSOLDWH PROD"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<scriptlet name="scriptlet1" class="com.atolcd.jasper.craal.CraalScriptlet"/>
+	<parameter name="p_millesime" class="java.lang.Integer"/>
+	<parameter name="p_etats_groupe" class="java.util.Collection"/>
+	<parameter name="p_cultures" class="java.util.List">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FR_idutilisateur" class="java.lang.Integer"/>
+	<parameter name="p_exploitations" class="java.util.Collection"/>
+	<parameter name="schema_bdaplat_name" class="java.lang.String">
+		<defaultValueExpression><![CDATA[$P{scriptlet1_SCRIPTLET}.getSchemaBdaplatName()]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_moyen" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT 	ta.report_folder || '/' || ta.report_id as id_etat,
+	ta.report_name as label_etat,
+	tcoo.nom, tcoo.adresse1, tcoo.adresse2 ,tcoo.cp , tcoo.ville,
+	tgr.nom_groupe, tgr.iddepartement
+FROM bdanalysegroupe.analyse ta
+JOIN bdanalysegroupe.analyse_par_dept tapd ON (tapd.idanalyse=ta.idanalyse)
+JOIN bdanalysegroupe.tutilisateurs tu ON (tu.identite=tapd.iddepartement)
+JOIN bdanalysegroupe.groupe tgr ON (tgr.idutilisateur=tu.idutilisateur)
+JOIN bdanalysegroupe.coordonnees tcoo ON (tcoo.iddepartement=tu.identite)
+WHERE
+	tu.idutilisateur = $P{FR_idutilisateur}
+AND 	$X{IN, report_folder || '/' || report_id, p_etats_groupe}
+ORDER BY ta.report_order]]>
+	</queryString>
+	<field name="id_etat" class="java.lang.String"/>
+	<field name="label_etat" class="java.lang.String"/>
+	<field name="nom" class="java.lang.String"/>
+	<field name="adresse1" class="java.lang.String"/>
+	<field name="adresse2" class="java.lang.String"/>
+	<field name="cp" class="java.lang.String"/>
+	<field name="ville" class="java.lang.String"/>
+	<field name="nom_groupe" class="java.lang.String"/>
+	<field name="iddepartement" class="java.lang.Integer"/>
+	<group name="parAnalyse" isStartNewPage="true">
+		<groupExpression><![CDATA[$F{id_etat}]]></groupExpression>
+		<groupFooter>
+			<band height="46" splitType="Immediate">
+				<subreport isUsingCache="false">
+					<reportElement key="Analyse" x="20" y="1" width="802" height="45" uuid="6deaff4c-f61f-478e-b403-d4a0ca043f1b"/>
+					<subreportParameter name="p_exploitations">
+						<subreportParameterExpression><![CDATA[$P{p_exploitations}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="schema_bdaplat_name">
+						<subreportParameterExpression><![CDATA[$P{schema_bdaplat_name}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="p_cultures">
+						<subreportParameterExpression><![CDATA[$P{p_cultures}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="p_millesime">
+						<subreportParameterExpression><![CDATA[$P{p_millesime}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="FR_idutilisateur">
+						<subreportParameterExpression><![CDATA[$P{FR_idutilisateur}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="p_moyen">
+						<subreportParameterExpression><![CDATA[$P{p_moyen}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression><![CDATA["repo:"+$F{id_etat}]]></subreportExpression>
+				</subreport>
+			</band>
+		</groupFooter>
+	</group>
+	<title>
+		<band height="595" splitType="Stretch">
+			<image hAlign="Right">
+				<reportElement key="Logo_fond" style="texte_defaut" isPrintRepeatedValues="false" x="70" y="0" width="772" height="595" uuid="ba1feff5-fef9-4b15-9230-1cd5aad657ba"/>
+				<imageExpression><![CDATA["repo:/images/logo/logo_CA.jpeg"]]></imageExpression>
+			</image>
+			<staticText>
+				<reportElement key="Titre" style="titre1" x="20" y="38" width="802" height="54" uuid="6e08709c-f97c-4400-8e51-6224eb4e6c67"/>
+				<textElement textAlignment="Left" markup="none">
+					<font fontName="SansSerif" size="42" isBold="false" isItalic="false" isStrikeThrough="false" pdfFontName="Helvetica" isPdfEmbedded="false"/>
+				</textElement>
+				<text><![CDATA[Synthèse de groupe]]></text>
+			</staticText>
+			<image scaleImage="RealSize">
+				<reportElement key="Image_MesParcelles" style="texte_defaut" x="557" y="42" width="126" height="50" uuid="61ff6443-fc0a-4315-8935-08d8ec6a8c75"/>
+				<imageExpression><![CDATA["repo:/images/logo/logoMesParcelles_l.jpeg"]]></imageExpression>
+			</image>
+			<textField>
+				<reportElement key="SousTitre_groupe" style="titre2" x="20" y="110" width="802" height="27" uuid="db4f16d8-b7a2-4441-ba98-6886284aec55"/>
+				<textElement textAlignment="Left">
+					<font size="20" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{nom_groupe}]]></textFieldExpression>
+			</textField>
+			<image>
+				<reportElement key="logo_departement" style="texte_defaut" x="23" y="255" width="145" height="127" uuid="73af5090-7270-4562-b529-e9f2450421b1"/>
+				<imageExpression><![CDATA["repo:/images/logo/NomSeul_CA_"+$F{iddepartement}]]></imageExpression>
+			</image>
+			<textField>
+				<reportElement key="SousTitre_millesime" style="titre2" x="20" y="147" width="802" height="27" uuid="98da0aad-2a7b-4107-bcb2-fd1f5d9ff5ed"/>
+				<textElement textAlignment="Left">
+					<font size="20" pdfFontName="Helvetica" isPdfEmbedded="false"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Millésime "+$P{p_millesime}]]></textFieldExpression>
+			</textField>
+			<textField pattern="MMMMM yyyy">
+				<reportElement key="date" style="texte_defaut" x="20" y="561" width="100" height="14" uuid="d6b00080-2fe6-4db5-b091-0fa5627e377e"/>
+				<textElement>
+					<font pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="adr1_chambre" style="sous_titre1" x="20" y="415" width="371" height="22" uuid="06de81ec-f680-43d2-8376-4f01eb4cabac"/>
+				<box topPadding="5"/>
+				<textElement textAlignment="Left">
+					<font size="12" isBold="false" isItalic="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{adresse1}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="true">
+				<reportElement key="adr2_chambre" style="sous_titre1" x="20" y="437" width="371" height="22" uuid="5a34b046-cfd0-432a-a2ac-c8df03fa1820"/>
+				<box topPadding="5"/>
+				<textElement textAlignment="Left">
+					<font size="12" isBold="false" isItalic="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{adresse2}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="adr3_chambre" style="sous_titre1" x="20" y="459" width="371" height="22" uuid="3297f44f-d670-4aa3-981a-a2cc7bbfa1d1"/>
+				<box topPadding="5"/>
+				<textElement textAlignment="Left">
+					<font size="12" isBold="false" isItalic="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{cp}+" "+$F{ville}]]></textFieldExpression>
+			</textField>
+			<textField isBlankWhenNull="false">
+				<reportElement key="nom_chambre" style="sous_titre1" x="20" y="393" width="371" height="22" uuid="6bb86fdf-f9b1-41c6-8cf2-e3c048b65c7b"/>
+				<box topPadding="5"/>
+				<textElement textAlignment="Left">
+					<font size="12" isBold="false" isItalic="false" pdfFontName="Helvetica"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{nom}]]></textFieldExpression>
+			</textField>
+		</band>
+	</title>
+	<pageHeader>
+		<band height="50">
+			<textField>
+				<reportElement style="sous_titre1" x="354" y="25" width="135" height="25" uuid="926ca448-203e-4842-95b4-6012b9284c1c"/>
+				<box topPadding="5">
+					<bottomPen lineWidth="0.0"/>
+				</box>
+				<textElement textAlignment="Center">
+					<font size="14" isBold="true"/>
+				</textElement>
+				<textFieldExpression><![CDATA["Récolte "+$P{p_millesime}]]></textFieldExpression>
+			</textField>
+			<staticText>
+				<reportElement style="sous_titre1" mode="Opaque" x="20" y="13" width="161" height="22" uuid="bf935735-9ffb-4c9b-96af-37783b18a77e"/>
+				<textElement textAlignment="Left" verticalAlignment="Middle" markup="none">
+					<font size="11"/>
+					<paragraph lineSpacing="Single"/>
+				</textElement>
+				<text><![CDATA[Synthèse de groupe]]></text>
+			</staticText>
+			<image hAlign="Right">
+				<reportElement key="petit_logo" x="786" y="20" width="36" height="30" uuid="219c470a-d9dd-4b55-b2c5-ed4bd850514d"/>
+				<imageExpression><![CDATA["repo:/images/logo/logo_seul"]]></imageExpression>
+			</image>
+			<textField>
+				<reportElement style="sous_titre2" x="20" y="30" width="161" height="20" uuid="ab5d46cf-bc0e-430c-9b5c-c27dec0b6b0b"/>
+				<box topPadding="5"/>
+				<textElement textAlignment="Left">
+					<font size="10"/>
+				</textElement>
+				<textFieldExpression><![CDATA[$F{nom_groupe}]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageHeader>
+	<pageFooter>
+		<band height="27">
+			<textField pattern="MMMMM yyyy">
+				<reportElement key="date" style="texte_defaut" x="20" y="0" width="123" height="27" uuid="2f862749-1162-47d7-b7e3-4d61fa9bf587"/>
+				<box topPadding="5" leftPadding="2"/>
+				<textElement textAlignment="Left"/>
+				<textFieldExpression><![CDATA[new java.util.Date()]]></textFieldExpression>
+			</textField>
+		</band>
+	</pageFooter>
+</jasperReport>

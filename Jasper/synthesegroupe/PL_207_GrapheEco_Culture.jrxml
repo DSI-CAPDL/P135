@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.2.0  -->
+<!-- 2017-11-15T16:18:37 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PL_Groupe_GraphiqueEcoParCulture" language="groovy" pageWidth="802" pageHeight="515" orientation="Landscape" columnWidth="802" leftMargin="0" rightMargin="0" topMargin="30" bottomMargin="20" uuid="ac39f317-27d2-4690-af48-78a60da082a1">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.jasperserver.url" value="http://172.24.12.203:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.user" value="jasperadmin"/>
+	<property name="ireport.jasperserver.report.resource" value="/rapports_PL/analyses/PL_207_GrapheEco_Culture"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="BDSOLDWH PROD"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
+	<template><![CDATA["repo:/styles/PL_style_rapports"]]></template>
+	<style name="CrossTab Valeur" forecolor="#000000" backcolor="#FFFFFF" fill="Solid" hTextAlign="Center" hImageAlign="Center" vTextAlign="Middle" vImageAlign="Middle" isBold="false" isItalic="true" isUnderline="false" isStrikeThrough="false">
+		<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{clef}.split('#')[0]=="000"||$V{clef}.split('#')[0]=="001"||$V{clef}.split('#')[0]=="002"||$V{clef}.split('#')[0]=="005"||$V{clef}.split('#')[0]=="012"||$V{clef}.split('#')[0]=="013"||$V{clef}.split('#')[0]=="014")]]></conditionExpression>
+			<style mode="Opaque" forecolor="#004A1D" backcolor="#FFFFFF" fill="Solid" vTextAlign="Middle" vImageAlign="Middle" fontSize="10" isBold="true" isItalic="false">
+				<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="1.0" lineColor="#FEFEFE"/>
+					<topPen lineWidth="1.0" lineColor="#FEFEFE"/>
+					<leftPen lineWidth="1.0" lineColor="#FEFEFE"/>
+					<bottomPen lineWidth="1.0" lineColor="#FEFEFE"/>
+					<rightPen lineWidth="1.0" lineColor="#FEFEFE"/>
+				</box>
+			</style>
+		</conditionalStyle>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{clef}.split('#')[0]=="015"||$V{clef}.split('#')[0]=="016"||$V{clef}.split('#')[0]=="019"||$V{clef}.split('#')[0]=="020")]]></conditionExpression>
+			<style forecolor="#004A1D" backcolor="#95E466" fontSize="10" isBold="true" isItalic="false">
+				<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+			</style>
+		</conditionalStyle>
+	</style>
+	<style name="CrossTab Clef" style="CrossTab Valeur" mode="Opaque" fill="Solid" hTextAlign="Left" hImageAlign="Left" fontName="SansSerif" fontSize="10" isBold="false" isItalic="true" isUnderline="false" isStrikeThrough="false">
+		<box leftPadding="50">
+			<pen lineColor="#CCCCCC"/>
+			<topPen lineWidth="0.5" lineColor="#CCCCCC"/>
+			<leftPen lineWidth="0.5" lineColor="#CCCCCC"/>
+			<bottomPen lineWidth="0.5" lineColor="#CCCCCC"/>
+			<rightPen lineWidth="0.5" lineColor="#CCCCCC"/>
+		</box>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{clef}.split('#')[0]=="000"||$V{clef}.split('#')[0]=="001"||$V{clef}.split('#')[0]=="002"||$V{clef}.split('#')[0]=="005"||$V{clef}.split('#')[0]=="012"||$V{clef}.split('#')[0]=="013"||$V{clef}.split('#')[0]=="014")]]></conditionExpression>
+			<style mode="Opaque" forecolor="#004A1D" backcolor="#FFFFFF" fill="Solid" hTextAlign="Left" hImageAlign="Left" isBold="true" isItalic="false" isUnderline="false" isStrikeThrough="false">
+				<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+				<box leftPadding="4"/>
+			</style>
+		</conditionalStyle>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{clef}.split('#')[0]=="015"||$V{clef}.split('#')[0]=="016"||$V{clef}.split('#')[0]=="019"||$V{clef}.split('#')[0]=="020")]]></conditionExpression>
+			<style forecolor="#004A1D" backcolor="#95E466" fill="Solid" fontSize="10" isBold="true" isItalic="false">
+				<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+				<box leftPadding="4"/>
+			</style>
+		</conditionalStyle>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{clef}.split('#')[0]=="020")]]></conditionExpression>
+			<style fontSize="12">
+				<paragraph lineSpacing="Single" spacingBefore="6" spacingAfter="6"/>
+			</style>
+		</conditionalStyle>
+	</style>
+	<style name="CrossTab Type" forecolor="#004A1D" fontSize="11">
+		<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+		<box leftPadding="4"/>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{type}.split('#')[0]=="04")]]></conditionExpression>
+			<style mode="Transparent" fontSize="11">
+				<paragraph lineSpacing="1_1_2"/>
+			</style>
+		</conditionalStyle>
+	</style>
+	<parameter name="p_millesime" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[2013]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_exploitations" class="java.util.Collection"/>
+	<parameter name="schema_bdaplat_name" class="java.lang.String">
+		<defaultValueExpression><![CDATA["public"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FR_idutilisateur" class="java.lang.Integer"/>
+	<parameter name="p_cultures" class="java.util.List">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_moyen" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT
+	'marges' AS eco,
+	SUM(ve.marge)/SUM(ve.surface) AS valeur,
+	ve.millesime AS millesime,
+	t1.libelletypeculture AS culture
+FROM bdanalysegroupe.$P!{p_moyen} ve
+-- jointure sur les types de cultures
+LEFT JOIN (
+	SELECT tcpt.*,ttc.codetypeculture,ttc.libelletypeculture FROM
+	bdanalysegroupe.cultures_par_type tcpt
+	JOIN bdanalysegroupe.type_culture ttc ON (ttc.idtypeculture=tcpt.idtypeculture)
+	JOIN bdanalysegroupe.tutilisateurs tu ON (tcpt.iddepartement=tu.identite)
+	WHERE
+		SUBSTRING(ttc.codetypeculture FROM 1 FOR 3) LIKE 'PL_'
+		AND tu.idutilisateur=$P{FR_idutilisateur}
+	) t1
+ON (t1.idculture=ve.idculture)
+WHERE
+-- critere sur le millesime
+	(ve.millesime=$P{p_millesime}
+	OR ve.millesime=$P{p_millesime}-1
+	OR ve.millesime=$P{p_millesime}-2
+	)
+-- critere sur les exploitations selectionnees
+AND	$X{IN, CAST(ve.idexploitation as varchar), p_exploitations}
+-- critere sur les cultures selectionnees
+AND	$X{IN, CAST(t1.idtypeculture AS varchar), p_cultures}
+
+GROUP BY culture,millesime
+
+UNION
+
+SELECT
+	'produits' AS eco,
+	SUM(ve.produits)/SUM(ve.surface)  AS valeur,
+	ve.millesime AS millesime,
+	t1.libelletypeculture AS culture
+FROM bdanalysegroupe.$P!{p_moyen} ve
+-- jointure sur les types de cultures
+LEFT JOIN (
+	SELECT tcpt.*,ttc.codetypeculture,ttc.libelletypeculture FROM
+	bdanalysegroupe.cultures_par_type tcpt
+	JOIN bdanalysegroupe.type_culture ttc ON (ttc.idtypeculture=tcpt.idtypeculture)
+	JOIN bdanalysegroupe.tutilisateurs tu ON (tcpt.iddepartement=tu.identite)
+	WHERE
+		SUBSTRING(ttc.codetypeculture FROM 1 FOR 3) LIKE 'PL_'
+		AND tu.idutilisateur=$P{FR_idutilisateur}
+	) t1
+ON (t1.idculture=ve.idculture)
+WHERE
+-- critere sur le millesime
+	(ve.millesime=$P{p_millesime}
+	OR ve.millesime=$P{p_millesime}-1
+	OR ve.millesime=$P{p_millesime}-2
+	)
+-- critere sur les exploitations selectionnees
+AND	$X{IN, CAST(ve.idexploitation as varchar), p_exploitations}
+-- critere sur les cultures selectionnees
+AND	$X{IN, CAST(t1.idtypeculture AS varchar), p_cultures}
+
+GROUP BY culture,millesime
+
+UNION
+
+SELECT
+	'charges' AS eco,
+	SUM(ve.charges)/SUM(ve.surface) AS valeur,
+	ve.millesime AS millesime,
+	t1.libelletypeculture AS culture
+FROM bdanalysegroupe.$P!{p_moyen} ve
+-- jointure sur les types de cultures
+LEFT JOIN (
+	SELECT tcpt.*,ttc.codetypeculture,ttc.libelletypeculture FROM
+	bdanalysegroupe.cultures_par_type tcpt
+	JOIN bdanalysegroupe.type_culture ttc ON (ttc.idtypeculture=tcpt.idtypeculture)
+	JOIN bdanalysegroupe.tutilisateurs tu ON (tcpt.iddepartement=tu.identite)
+	WHERE
+		SUBSTRING(ttc.codetypeculture FROM 1 FOR 3) LIKE 'PL_'
+		AND tu.idutilisateur=$P{FR_idutilisateur}
+	) t1
+ON (t1.idculture=ve.idculture)
+WHERE
+-- critere sur le millesime
+	(ve.millesime=$P{p_millesime}
+	OR ve.millesime=$P{p_millesime}-1
+	OR ve.millesime=$P{p_millesime}-2
+	)
+-- critere sur les exploitations selectionnees
+AND	$X{IN, CAST(ve.idexploitation as varchar), p_exploitations}
+-- critere sur les culture selectionnees
+AND	$X{IN, CAST(t1.idtypeculture AS varchar), p_cultures}
+
+GROUP BY culture,millesime
+ORDER BY culture, eco, millesime]]>
+	</queryString>
+	<field name="eco" class="java.lang.String"/>
+	<field name="valeur" class="java.lang.Double"/>
+	<field name="millesime" class="java.lang.Integer"/>
+	<field name="culture" class="java.lang.String"/>
+	<group name="gr_culture">
+		<groupExpression><![CDATA[$F{culture}]]></groupExpression>
+		<groupHeader>
+			<band height="40">
+				<textField>
+					<reportElement style="titre_edition" x="0" y="0" width="802" height="40" uuid="c7fc7829-f611-4c81-80f0-01ab4de17ee4"/>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="none">
+						<font size="20" isBold="false"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Evolution des résultats économiques sur "+$F{culture}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="425">
+				<multiAxisChart>
+					<chart>
+						<reportElement x="0" y="42" width="682" height="373" isPrintWhenDetailOverflows="true" uuid="e235d2e6-f0ad-4b69-baef-465fbf7b4ab6"/>
+						<chartTitle/>
+						<chartSubtitle/>
+						<chartLegend position="Right">
+							<font size="12"/>
+						</chartLegend>
+					</chart>
+					<multiAxisPlot>
+						<plot/>
+						<axis position="leftOrTop">
+							<barChart>
+								<chart>
+									<reportElement x="0" y="0" width="0" height="0" backcolor="#FFFFFF" uuid="c4054834-f2e3-4c6e-9630-7bc95c10c87f"/>
+									<chartTitle color="#000000"/>
+									<chartSubtitle color="#000000"/>
+									<chartLegend textColor="#000000" backgroundColor="#FFFFFF" position="Right">
+										<font size="12"/>
+									</chartLegend>
+								</chart>
+								<categoryDataset>
+									<dataset resetType="Group" resetGroup="gr_culture"/>
+									<categorySeries>
+										<seriesExpression><![CDATA[$F{millesime}]]></seriesExpression>
+										<categoryExpression><![CDATA[$F{eco}]]></categoryExpression>
+										<valueExpression><![CDATA[$F{valeur}]]></valueExpression>
+										<labelExpression><![CDATA[Math.round($F{valeur})+""]]></labelExpression>
+									</categorySeries>
+								</categoryDataset>
+								<barPlot isShowLabels="true" isShowTickLabels="true" isShowTickMarks="true">
+									<plot labelRotation="0.0">
+										<seriesColor seriesOrder="0" color="#4F81BD"/>
+										<seriesColor seriesOrder="1" color="#9BBB59"/>
+										<seriesColor seriesOrder="2" color="#C0504D"/>
+									</plot>
+									<itemLabel/>
+									<categoryAxisFormat labelRotation="0.0">
+										<axisFormat>
+											<tickLabelFont>
+												<font size="12"/>
+											</tickLabelFont>
+										</axisFormat>
+									</categoryAxisFormat>
+									<valueAxisLabelExpression><![CDATA["(€/ha)"]]></valueAxisLabelExpression>
+									<valueAxisFormat>
+										<axisFormat verticalTickLabels="false">
+											<labelFont>
+												<font size="12"/>
+											</labelFont>
+											<tickLabelFont>
+												<font size="8"/>
+											</tickLabelFont>
+										</axisFormat>
+									</valueAxisFormat>
+								</barPlot>
+							</barChart>
+						</axis>
+					</multiAxisPlot>
+				</multiAxisChart>
+			</band>
+		</groupFooter>
+	</group>
+</jasperReport>

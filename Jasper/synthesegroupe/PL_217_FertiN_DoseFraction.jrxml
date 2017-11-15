@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.2.0  -->
+<!-- 2017-11-15T16:19:18 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PL_Groupe_FertiNDoseFraction" language="groovy" pageWidth="802" pageHeight="515" orientation="Landscape" columnWidth="802" leftMargin="0" rightMargin="0" topMargin="30" bottomMargin="0" uuid="73151e4a-b7b9-418b-8915-49be319da648">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.jasperserver.url" value="http://172.24.12.203:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.user" value="jasperadmin"/>
+	<property name="ireport.jasperserver.report.resource" value="/rapports_PL/analyses/PL_217_FertiN_DoseFraction"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="BDSOL PROD"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<template><![CDATA["repo:/styles/PL_style_rapports"]]></template>
+	<parameter name="p_millesime" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[2013]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_exploitations" class="java.util.Collection">
+		<defaultValueExpression><![CDATA["77456"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="schema_bdaplat_name" class="java.lang.String">
+		<defaultValueExpression><![CDATA["bdaplat"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FR_idutilisateur" class="java.lang.Integer">
+		<parameterDescription><![CDATA[]]></parameterDescription>
+		<defaultValueExpression><![CDATA["barag44d"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_cultures" class="java.util.List">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<queryString>
+		<![CDATA[SELECT
+	vp.millesime AS millesime,
+	t1.libelletypeculture AS culture,
+	t1.idtypeculture,
+	COALESCE (t2.nb_apports,0) AS nb_apports,
+	SUM(vp.fertimin_n*vp.surface)/SUM(vp.surface) AS ferti_n_moy,
+	SUM(vp.qte_recolte)/SUM(vp.surface) AS rdt_moy,
+	SUM(vp.surface) AS sum_surf,
+	COUNT(vp.idparcelle) AS nb_parcelles
+
+FROM bdanalysegroupe.vue_parcelles vp
+-- jointure sur les types de cultures
+LEFT JOIN (
+	SELECT tcpt.*,ttc.codetypeculture,ttc.libelletypeculture FROM
+	bdanalysegroupe.cultures_par_type tcpt
+	JOIN bdanalysegroupe.type_culture ttc ON (ttc.idtypeculture=tcpt.idtypeculture)
+	JOIN bdanalysegroupe.tutilisateurs tu ON (tcpt.iddepartement=tu.identite)
+	WHERE
+		SUBSTRING(ttc.codetypeculture FROM 1 FOR 3) LIKE 'PL_'
+		AND tu.idutilisateur=$P{FR_idutilisateur}
+	) t1
+ON (t1.idculture=vp.idculture)
+-- jointure sur les interventions de type fertilisation minerale
+LEFT JOIN (
+	SELECT idparcelleculturale, eve_millesime, COUNT(*) AS nb_apports
+	FROM bdaplat.ptinterventions
+	--critere sur les interventions fertilisations minerales realisees
+	WHERE	eve_typeid=1 AND eve_etat=1 and int_nteneur >0
+	GROUP BY idparcelleculturale, eve_millesime
+	) t2
+ON (vp.idparcelle=t2.idparcelleculturale AND vp.millesime=t2.eve_millesime)
+WHERE
+-- critere sur le millesime
+	vp.millesime=$P{p_millesime}
+-- critere sur les exploitations selectionnees
+AND	$X{IN, CAST(vp.idexploitation as varchar), p_exploitations}
+-- critere sur les cultures selectionnees
+AND	$X{IN, CAST(t1.idtypeculture AS varchar), p_cultures}
+-- critere surface non nulle
+AND vp.surface>0
+and t2.nb_apports >0
+
+GROUP BY vp.millesime,t1.libelletypeculture, t1.idtypeculture, t2.nb_apports
+ORDER BY millesime, culture, nb_apports]]>
+	</queryString>
+	<field name="millesime" class="java.lang.Integer"/>
+	<field name="culture" class="java.lang.String"/>
+	<field name="idtypeculture" class="java.lang.Integer"/>
+	<field name="nb_apports" class="java.lang.Long"/>
+	<field name="ferti_n_moy" class="java.lang.Double"/>
+	<field name="rdt_moy" class="java.lang.Double"/>
+	<field name="sum_surf" class="java.lang.Double"/>
+	<field name="nb_parcelles" class="java.lang.Long"/>
+	<variable name="total_parcelles" class="java.lang.Integer" resetType="Group" resetGroup="gr_culture" calculation="Sum">
+		<variableExpression><![CDATA[$F{nb_parcelles}]]></variableExpression>
+	</variable>
+	<variable name="total_surf" class="java.lang.Double" resetType="Group" resetGroup="gr_culture" calculation="Sum">
+		<variableExpression><![CDATA[$F{sum_surf}]]></variableExpression>
+	</variable>
+	<variable name="som_doseXsurf" class="java.lang.Float" resetType="Group" resetGroup="gr_culture" calculation="Sum">
+		<variableExpression><![CDATA[$F{ferti_n_moy}*$F{sum_surf}]]></variableExpression>
+	</variable>
+	<variable name="som_rdtXsurf" class="java.lang.Float" resetType="Group" resetGroup="gr_culture" calculation="Sum">
+		<variableExpression><![CDATA[$F{rdt_moy}*$F{sum_surf}]]></variableExpression>
+	</variable>
+	<group name="gr_culture">
+		<groupExpression><![CDATA[$F{culture}]]></groupExpression>
+		<groupHeader>
+			<band height="40">
+				<textField>
+					<reportElement style="titre_edition" x="0" y="0" width="802" height="40" uuid="ac774b19-25f9-4834-9dd6-abc6d91356fb"/>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="none">
+						<font size="20" isBold="false"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Fertilisation minérale azotée et fractionnement sur "+$F{culture}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="445">
+				<multiAxisChart>
+					<chart isShowLegend="false">
+						<reportElement x="0" y="23" width="456" height="422" isPrintWhenDetailOverflows="true" uuid="f88eef95-c3f4-4fc4-b528-709ded427719"/>
+						<box>
+							<pen lineColor="#999999"/>
+							<topPen lineWidth="0.0" lineColor="#999999"/>
+							<leftPen lineWidth="0.0" lineColor="#999999"/>
+							<bottomPen lineWidth="0.0" lineColor="#999999"/>
+							<rightPen lineWidth="0.0" lineColor="#999999"/>
+						</box>
+						<chartTitle/>
+						<chartSubtitle/>
+						<chartLegend position="Right">
+							<font size="12"/>
+						</chartLegend>
+					</chart>
+					<multiAxisPlot>
+						<plot/>
+						<axis position="rightOrBottom">
+							<lineChart>
+								<chart isShowLegend="false">
+									<reportElement x="0" y="0" width="0" height="0" backcolor="#FFFFFF" uuid="1ce4ceca-7d15-4bab-a8e4-3f7f92306bdf"/>
+									<chartTitle color="#000000"/>
+									<chartSubtitle color="#000000"/>
+									<chartLegend textColor="#000000" backgroundColor="#FFFFFF" position="Right">
+										<font size="12"/>
+									</chartLegend>
+								</chart>
+								<categoryDataset>
+									<dataset resetType="Group" resetGroup="gr_culture"/>
+									<categorySeries>
+										<seriesExpression><![CDATA[$F{millesime}]]></seriesExpression>
+										<categoryExpression><![CDATA[$F{nb_apports}]]></categoryExpression>
+										<valueExpression><![CDATA[$F{rdt_moy}]]></valueExpression>
+									</categorySeries>
+								</categoryDataset>
+								<linePlot>
+									<plot>
+										<seriesColor seriesOrder="0" color="#91132E"/>
+									</plot>
+									<categoryAxisLabelExpression><![CDATA["Nombre d'apports"]]></categoryAxisLabelExpression>
+									<categoryAxisFormat>
+										<axisFormat>
+											<labelFont>
+												<font size="12"/>
+											</labelFont>
+										</axisFormat>
+									</categoryAxisFormat>
+									<valueAxisLabelExpression><![CDATA[$F{idtypeculture}<2000?"Rendement moyen (q/ha)":"Rendement moyen (tMS/ha)"]]></valueAxisLabelExpression>
+									<valueAxisFormat>
+										<axisFormat labelColor="#91132E" tickLabelColor="#91132E" axisLineColor="#91132E">
+											<labelFont>
+												<font size="12" isBold="true"/>
+											</labelFont>
+										</axisFormat>
+									</valueAxisFormat>
+								</linePlot>
+							</lineChart>
+						</axis>
+						<axis position="leftOrTop">
+							<barChart>
+								<chart isShowLegend="false" customizerClass="com.atolcd.jasper.craal.charts.LabeledColoredBarChart">
+									<reportElement x="0" y="0" width="0" height="0" forecolor="#6AAF23" backcolor="#FFFFFF" uuid="7a3ffe13-5105-49a7-b9b6-560cf6255fe0"/>
+									<chartTitle color="#000000"/>
+									<chartSubtitle color="#000000"/>
+									<chartLegend textColor="#000000" backgroundColor="#FFFFFF" position="Right">
+										<font size="12"/>
+									</chartLegend>
+								</chart>
+								<categoryDataset>
+									<dataset resetType="Group" resetGroup="gr_culture"/>
+									<categorySeries>
+										<seriesExpression><![CDATA[$F{millesime}]]></seriesExpression>
+										<categoryExpression><![CDATA[$F{nb_apports}]]></categoryExpression>
+										<valueExpression><![CDATA[$F{ferti_n_moy}]]></valueExpression>
+										<labelExpression><![CDATA["UN/ha"]]></labelExpression>
+									</categorySeries>
+								</categoryDataset>
+								<barPlot isShowLabels="true" isShowTickLabels="true" isShowTickMarks="true">
+									<plot labelRotation="0.0">
+										<seriesColor seriesOrder="0" color="#6AAF23"/>
+										<seriesColor seriesOrder="1" color="#4F81BD"/>
+										<seriesColor seriesOrder="2" color="#C0504D"/>
+									</plot>
+									<itemLabel/>
+									<categoryAxisFormat labelRotation="0.0">
+										<axisFormat labelColor="#333333">
+											<tickLabelFont>
+												<font size="12"/>
+											</tickLabelFont>
+										</axisFormat>
+									</categoryAxisFormat>
+									<valueAxisLabelExpression><![CDATA["Fertilisation minérale (UN/ha)"]]></valueAxisLabelExpression>
+									<valueAxisFormat>
+										<axisFormat labelColor="#6AAF23" tickLabelColor="#6AAF23" verticalTickLabels="false" axisLineColor="#6AAF23">
+											<labelFont>
+												<font size="12" isBold="true"/>
+											</labelFont>
+											<tickLabelFont>
+												<font size="8"/>
+											</tickLabelFont>
+										</axisFormat>
+									</valueAxisFormat>
+								</barPlot>
+							</barChart>
+						</axis>
+					</multiAxisPlot>
+				</multiAxisChart>
+				<textField pattern="###0 parcelle(s)">
+					<reportElement style="texte_defaut" isPrintRepeatedValues="false" x="523" y="37" width="226" height="20" uuid="8c936b5f-699c-4ae7-a54e-260f3c459b58"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<pen lineStyle="Double" lineColor="#009F49"/>
+						<topPen lineWidth="2.0" lineStyle="Double" lineColor="#009F49"/>
+						<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineWidth="0.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{total_parcelles}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0.0 ha">
+					<reportElement style="texte_defaut" isPrintRepeatedValues="false" x="523" y="57" width="226" height="20" uuid="b9089ed4-aa52-470f-8c84-291c60c5cba0"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<pen lineStyle="Double" lineColor="#009F49"/>
+						<topPen lineWidth="0.0" lineStyle="Double" lineColor="#009F49"/>
+						<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineWidth="0.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{total_surf}]]></textFieldExpression>
+				</textField>
+				<textField pattern="Fertilisation moyenne ###0 UN/ha">
+					<reportElement style="texte_defaut" isPrintRepeatedValues="false" x="523" y="77" width="226" height="20" uuid="a3ce29d4-bc41-450b-991e-76b6b8102423"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<pen lineStyle="Solid" lineColor="#009F49"/>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#009F49"/>
+						<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineWidth="0.0" lineStyle="Solid" lineColor="#5BBF21"/>
+						<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{som_doseXsurf}/$V{total_surf}]]></textFieldExpression>
+				</textField>
+				<textField pattern="">
+					<reportElement style="texte_defaut" isPrintRepeatedValues="false" x="523" y="97" width="226" height="20" uuid="ea30a623-fa4d-4e73-80bb-3c3651d1fa38"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<pen lineStyle="Solid" lineColor="#009F49"/>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#009F49"/>
+						<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Rendement moyen "+ Math.round($V{som_rdtXsurf}/$V{total_surf})+($F{idtypeculture}<2000?" q/ha":" tMS/ha")]]></textFieldExpression>
+				</textField>
+				<pieChart>
+					<chart isShowLegend="true">
+						<reportElement x="467" y="141" width="325" height="263" uuid="71ab97c9-ff06-470d-b83a-b31e879a0eff"/>
+						<box>
+							<pen lineColor="#999999"/>
+							<topPen lineWidth="1.0" lineColor="#999999"/>
+							<leftPen lineWidth="1.0" lineColor="#999999"/>
+							<bottomPen lineWidth="1.0" lineStyle="Solid" lineColor="#999999"/>
+							<rightPen lineWidth="1.0" lineColor="#999999"/>
+						</box>
+						<chartTitle>
+							<font size="12" isBold="false"/>
+							<titleExpression><![CDATA["Fractionnement en part de SAU"]]></titleExpression>
+						</chartTitle>
+						<chartSubtitle>
+							<font size="12"/>
+						</chartSubtitle>
+						<chartLegend position="Bottom"/>
+					</chart>
+					<pieDataset minPercentage="1.0">
+						<dataset resetType="Group" resetGroup="gr_culture"/>
+						<keyExpression><![CDATA[$F{nb_apports}]]></keyExpression>
+						<valueExpression><![CDATA[$F{sum_surf}]]></valueExpression>
+					</pieDataset>
+					<piePlot labelFormat="{0} apport(s) ({2})" legendLabelFormat="{0} apport(s)">
+						<plot>
+							<seriesColor seriesOrder="0" color="#8EC632"/>
+							<seriesColor seriesOrder="1" color="#FF6319"/>
+							<seriesColor seriesOrder="2" color="#00A9E0"/>
+							<seriesColor seriesOrder="3" color="#722EA5"/>
+							<seriesColor seriesOrder="4" color="#FECB00"/>
+							<seriesColor seriesOrder="5" color="#009139"/>
+							<seriesColor seriesOrder="6" color="#C59217"/>
+							<seriesColor seriesOrder="7" color="#00338D"/>
+							<seriesColor seriesOrder="8" color="#DFDF00"/>
+							<seriesColor seriesOrder="9" color="#7B2927"/>
+						</plot>
+						<itemLabel>
+							<font size="6"/>
+						</itemLabel>
+					</piePlot>
+				</pieChart>
+			</band>
+		</groupFooter>
+	</group>
+</jasperReport>

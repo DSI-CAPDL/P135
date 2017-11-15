@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.2.0  -->
+<!-- 2017-11-15T16:18:03 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PL Indiv_TableauEcoCompCV" language="groovy" pageWidth="802" pageHeight="595" orientation="Landscape" columnWidth="802" leftMargin="0" rightMargin="0" topMargin="20" bottomMargin="20" uuid="b25d2af1-4817-47da-ae9c-4d1df7cdaba1">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.jasperserver.url" value="http://172.24.12.203:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.user" value="jasperadmin"/>
+	<property name="ireport.jasperserver.report.resource" value="/rapports_PL/analyses/PL_204_TableEco_Comparaison"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="BDSOLDWH PROD"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<template><![CDATA["repo:/styles/PL_style_rapports"]]></template>
+	<style name="CrossTab Valeur" forecolor="#000000" backcolor="#FFFFFF" fill="Solid" hTextAlign="Center" hImageAlign="Center" vTextAlign="Middle" vImageAlign="Middle" isBold="false" isItalic="true" isUnderline="false" isStrikeThrough="false">
+		<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{clef}.split('#')[0]=="000"||$V{clef}.split('#')[0]=="001"||$V{clef}.split('#')[0]=="002"||$V{clef}.split('#')[0]=="005"||$V{clef}.split('#')[0]=="012"||$V{clef}.split('#')[0]=="013"||$V{clef}.split('#')[0]=="014")]]></conditionExpression>
+			<style mode="Opaque" forecolor="#004A1D" backcolor="#FFFFFF" fill="Solid" vTextAlign="Middle" vImageAlign="Middle" fontSize="10" isBold="true" isItalic="false">
+				<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="1.0" lineColor="#FEFEFE"/>
+					<topPen lineWidth="1.0" lineColor="#FEFEFE"/>
+					<leftPen lineWidth="1.0" lineColor="#FEFEFE"/>
+					<bottomPen lineWidth="1.0" lineColor="#FEFEFE"/>
+					<rightPen lineWidth="1.0" lineColor="#FEFEFE"/>
+				</box>
+			</style>
+		</conditionalStyle>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{clef}.split('#')[0]=="015"||$V{clef}.split('#')[0]=="016"||$V{clef}.split('#')[0]=="019"||$V{clef}.split('#')[0]=="020")]]></conditionExpression>
+			<style forecolor="#004A1D" backcolor="#95E466" fontSize="10" isBold="true" isItalic="false">
+				<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+			</style>
+		</conditionalStyle>
+	</style>
+	<style name="CrossTab Clef" style="CrossTab Valeur" mode="Opaque" fill="Solid" hTextAlign="Left" hImageAlign="Left" fontName="SansSerif" fontSize="10" isBold="false" isItalic="true" isUnderline="false" isStrikeThrough="false">
+		<box leftPadding="50">
+			<pen lineColor="#CCCCCC"/>
+			<topPen lineWidth="0.5" lineColor="#CCCCCC"/>
+			<leftPen lineWidth="0.5" lineColor="#CCCCCC"/>
+			<bottomPen lineWidth="0.5" lineColor="#CCCCCC"/>
+			<rightPen lineWidth="0.5" lineColor="#CCCCCC"/>
+		</box>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{clef}.split('#')[0]=="000"||$V{clef}.split('#')[0]=="001"||$V{clef}.split('#')[0]=="002"||$V{clef}.split('#')[0]=="005"||$V{clef}.split('#')[0]=="012"||$V{clef}.split('#')[0]=="013"||$V{clef}.split('#')[0]=="014")]]></conditionExpression>
+			<style mode="Opaque" forecolor="#004A1D" backcolor="#FFFFFF" fill="Solid" hTextAlign="Left" hImageAlign="Left" isBold="true" isItalic="false" isUnderline="false" isStrikeThrough="false">
+				<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+				<box leftPadding="4"/>
+			</style>
+		</conditionalStyle>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{clef}.split('#')[0]=="015"||$V{clef}.split('#')[0]=="016"||$V{clef}.split('#')[0]=="019"||$V{clef}.split('#')[0]=="020")]]></conditionExpression>
+			<style forecolor="#004A1D" backcolor="#95E466" fill="Solid" fontSize="10" isBold="true" isItalic="false">
+				<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+				<box leftPadding="4"/>
+			</style>
+		</conditionalStyle>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{clef}.split('#')[0]=="020")]]></conditionExpression>
+			<style fontSize="12">
+				<paragraph lineSpacing="Single"/>
+			</style>
+		</conditionalStyle>
+	</style>
+	<style name="CrossTab Type" forecolor="#004A1D" fontSize="11">
+		<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+		<box leftPadding="4"/>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{type}.split('#')[0]=="04")]]></conditionExpression>
+			<style mode="Transparent" fontSize="11">
+				<paragraph lineSpacing="1_1_2"/>
+			</style>
+		</conditionalStyle>
+	</style>
+	<parameter name="p_millesime" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[2013]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_exploitations" class="java.util.Collection"/>
+	<parameter name="schema_bdaplat_name" class="java.lang.String">
+		<defaultValueExpression><![CDATA["public"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FR_idutilisateur" class="java.lang.Integer"/>
+	<parameter name="p_cultures" class="java.util.List">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_moyen" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT * FROM
+(SELECT
+unnest(array[
+'01#Données Techniques',
+'01#Données Techniques',
+'02#Charges',
+'02#Charges',
+'02#Charges',
+'02#Charges',
+'02#Charges',
+'02#Charges',
+'02#Charges',
+'02#Charges',
+'02#Charges',
+'02#Charges',
+'02#Charges',
+'02#Charges',
+'02#Charges',
+'02#Charges',
+'02#Charges',
+'03#Produits',
+'03#Produits',
+'03#Produits',
+'04#Marges'
+]) AS type,
+unnest(array[
+'000#Surface totale (ha)',
+'001#Rendement moyen (q ou tMS/ha)',
+'002#Charges Semences  (€/ha)',
+'003#       Engrais minéraux  (€/ha)',
+'004#       Engrais organique  (€/ha)',
+'005#Charges fertilisation  (€/ha)',
+'006#       Herbicides  (€/ha)',
+'007#       Fongicides  (€/ha)',
+'008#       Insecticides  (€/ha)',
+'009#       Molluscicides  (€/ha)',
+'010#       Regulateurs  (€/ha)',
+'011#       Adjuvants  (€/ha)',
+'012#Charges Phytosanitaires  (€/ha)',
+'013#Charges assurances  (€/ha)',
+'014#Autres charges  (€/ha)',
+'015#TOTAL CHARGES OPERATIONNELLES (€/ha)',
+'016#Total charges opérationnelles (€/Q)',
+'017#       Produit Brut et co-produits (€/ha)',
+'018#       Autres produits (€/ha)',
+'019#TOTAL PRODUITS (€/ha)',
+'020#MARGES BRUTES HORS PRIMES (€/ha)'
+]) AS clef
+,
+unnest(array[
+sum(iep_par_surf),
+sum(iep_par_rdtmoy*iep_par_surf)/sum(iep_par_surf),
+sum(eco_c_semence)/sum(iep_par_surf),
+sum(eco_c_fertimin)/sum(iep_par_surf),
+sum(eco_c_fertiorg)/sum(iep_par_surf),
+sum(eco_c_fertimin+eco_c_fertiorg)/sum(iep_par_surf),
+sum(eco_c_herbicide)/sum(iep_par_surf),
+sum(eco_c_fongicide)/sum(iep_par_surf),
+sum(eco_c_insecticide)/sum(iep_par_surf),
+sum(coalesce(eco_c_molluscicide__helicide,0))/sum(iep_par_surf),
+sum(eco_c_regulateur)/sum(iep_par_surf),
+sum(eco_c_adjuvants)/sum(iep_par_surf),
+sum(coalesce(eco_c_phyto,0)+coalesce(eco_c_adjuvants,0)+coalesce(eco_c_molluscicide__helicide,0)+coalesce(eco_c_regulateur,0))/sum(iep_par_surf),
+sum(coalesce(eco_c_ecoposte_assurance,0))/sum(iep_par_surf),
+null,
+--null,
+sum(eco_c_semence+eco_c_fertimin+eco_c_fertiorg+coalesce(eco_c_phyto,0)+coalesce(eco_c_adjuvants,0)+coalesce(eco_c_molluscicide__helicide,0)+coalesce(eco_c_regulateur,0)+coalesce(eco_c_ecoposte_assurance,0))/sum(iep_par_surf),
+--null,
+CASE WHEN t1.idtypeculture<2000 
+THEN 	(sum(eco_c_semence+eco_c_fertimin+eco_c_fertiorg+coalesce(eco_c_phyto,0)+coalesce(eco_c_adjuvants,0)+coalesce(eco_c_molluscicide__helicide,0)+coalesce(eco_c_regulateur,0)+coalesce(eco_c_ecoposte_assurance,0)))/(sum(iep_par_rdtmoy*iep_par_surf)) 
+ELSE (sum(eco_c_semence+eco_c_fertimin+eco_c_fertiorg+coalesce(eco_c_phyto,0)+coalesce(eco_c_adjuvants,0)+coalesce(eco_c_molluscicide__helicide,0)+coalesce(eco_c_regulateur,0)+coalesce(eco_c_ecoposte_assurance,0)))/(10*sum(iep_par_rdtmoy*iep_par_surf)) END,
+
+sum(eco_p_recolte+eco_p_coproduit)/sum(iep_par_surf),
+sum(eco_p_autre)/sum(iep_par_surf),
+sum(eco_p_recolte+eco_p_coproduit+eco_p_autre)/sum(iep_par_surf),
+sum(eco_m_tot)/sum(iep_par_surf)
+]) AS valeur,
+
+
+t1.libelletypeculture AS culture
+
+FROM bdaplat.parcelles_$P!{p_millesime} p
+left join bdaplat.economique_$P!{p_millesime} using (iep_idparcelleculturale)
+-- jointure sur les types de cultures
+LEFT JOIN (
+	SELECT tcpt.*,ttc.codetypeculture,ttc.libelletypeculture
+	FROM bdanalysegroupe.cultures_par_type tcpt
+	JOIN bdanalysegroupe.type_culture ttc ON (ttc.idtypeculture=tcpt.idtypeculture)
+	JOIN bdanalysegroupe.tutilisateurs tu ON (tcpt.iddepartement=tu.identite)
+	WHERE
+		SUBSTRING(ttc.codetypeculture FROM 1 FOR 3) LIKE 'PL_'
+		AND tu.idutilisateur=$P{FR_idutilisateur}
+	) t1
+ON (t1.idculture=p.iep_par_cultid)
+
+
+WHERE
+-- critere sur le millesime
+iep_par_millesime=$P{p_millesime}
+-- critere sur les exploitations selectionnees
+AND
+$X{IN, CAST(idexploitation AS varchar), p_exploitations}
+-- critere sur les cultures selectionnees
+AND $X{IN, CAST(t1.idtypeculture AS varchar), p_cultures}
+
+GROUP BY culture, t1.idtypeculture )
+AS req]]>
+	</queryString>
+	<field name="type" class="java.lang.String"/>
+	<field name="clef" class="java.lang.String"/>
+	<field name="valeur" class="java.lang.Double"/>
+	<field name="culture" class="java.lang.String"/>
+	<title>
+		<band height="50" splitType="Immediate">
+			<staticText>
+				<reportElement style="titre_edition" x="0" y="0" width="802" height="50" uuid="6630bb43-2903-4be4-aca3-972c5265f325"/>
+				<textElement textAlignment="Center" verticalAlignment="Top" markup="none">
+					<font size="20" isBold="false"/>
+				</textElement>
+				<text><![CDATA[Comparaison des marges brutes par culture]]></text>
+			</staticText>
+			<staticText>
+				<reportElement x="508" y="17" width="123" height="20" uuid="c02c82eb-9a5c-4503-befe-76e99fbaed19">
+					<printWhenExpression><![CDATA[$P{p_moyen} == "vue_economique_moyen"]]></printWhenExpression>
+				</reportElement>
+				<textElement textAlignment="Center" verticalAlignment="Middle">
+					<font isItalic="true"/>
+				</textElement>
+				<text><![CDATA[NB : à partir de prix indicatif]]></text>
+			</staticText>
+		</band>
+	</title>
+	<summary>
+		<band height="425" splitType="Immediate">
+			<crosstab columnBreakOffset="50" ignoreWidth="false">
+				<reportElement x="0" y="0" width="802" height="400" uuid="004a3f6a-0d93-4220-97ab-f7667b60e777"/>
+				<box>
+					<pen lineColor="#CCCCCC"/>
+					<topPen lineColor="#CCCCCC"/>
+					<leftPen lineColor="#CCCCCC"/>
+					<bottomPen lineColor="#CCCCCC"/>
+					<rightPen lineColor="#CCCCCC"/>
+				</box>
+				<crosstabHeaderCell>
+					<cellContents/>
+				</crosstabHeaderCell>
+				<rowGroup name="type" width="113" headerPosition="Middle">
+					<bucket class="java.lang.String">
+						<bucketExpression><![CDATA[$F{type}]]></bucketExpression>
+						<orderByExpression><![CDATA[" "]]></orderByExpression>
+					</bucket>
+					<crosstabRowHeader>
+						<cellContents>
+							<box>
+								<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+								<topPen lineWidth="0.75" lineColor="#CCCCCC"/>
+								<leftPen lineWidth="0.75" lineColor="#CCCCCC"/>
+								<bottomPen lineWidth="0.75" lineColor="#CCCCCC"/>
+								<rightPen lineWidth="0.5" lineColor="#CCCCCC"/>
+							</box>
+							<textField isStretchWithOverflow="true">
+								<reportElement style="CrossTab Type" stretchType="RelativeToTallestObject" x="0" y="0" width="113" height="17" forecolor="#004A1D" uuid="99c81a0f-7be8-4633-bfc7-5fb813feef58"/>
+								<box leftPadding="4">
+									<topPen lineWidth="0.0"/>
+									<leftPen lineWidth="0.0"/>
+									<bottomPen lineWidth="0.0"/>
+									<rightPen lineWidth="0.0"/>
+								</box>
+								<textElement verticalAlignment="Middle">
+									<font isBold="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{type}.split('#')[1]]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabRowHeader>
+					<crosstabTotalRowHeader>
+						<cellContents/>
+					</crosstabTotalRowHeader>
+				</rowGroup>
+				<rowGroup name="clef" width="220">
+					<bucket class="java.lang.String">
+						<bucketExpression><![CDATA[$F{clef}]]></bucketExpression>
+					</bucket>
+					<crosstabRowHeader>
+						<cellContents backcolor="#FFFFFF" mode="Opaque">
+							<box>
+								<pen lineWidth="0.5" lineStyle="Solid" lineColor="#CCCCCC"/>
+								<topPen lineColor="#CCCCCC"/>
+								<leftPen lineColor="#CCCCCC"/>
+								<bottomPen lineColor="#CCCCCC"/>
+								<rightPen lineColor="#CCCCCC"/>
+							</box>
+							<textField>
+								<reportElement style="CrossTab Clef" stretchType="RelativeToTallestObject" x="0" y="0" width="220" height="17" uuid="03ca4eda-6211-43e1-8dd3-3dbfa3e4828a"/>
+								<box leftPadding="0">
+									<pen lineColor="#CCCCCC"/>
+									<topPen lineColor="#CCCCCC"/>
+									<leftPen lineColor="#CCCCCC"/>
+									<bottomPen lineColor="#CCCCCC"/>
+									<rightPen lineColor="#CCCCCC"/>
+								</box>
+								<textElement verticalAlignment="Middle">
+									<font size="9"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{clef}.split('#')[1]]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabRowHeader>
+					<crosstabTotalRowHeader>
+						<cellContents/>
+					</crosstabTotalRowHeader>
+				</rowGroup>
+				<columnGroup name="culture" height="33">
+					<bucket class="java.lang.String">
+						<bucketExpression><![CDATA[$F{culture}]]></bucketExpression>
+					</bucket>
+					<crosstabColumnHeader>
+						<cellContents backcolor="#95E466" mode="Opaque">
+							<box>
+								<pen lineWidth="0.5" lineStyle="Solid" lineColor="#CCCCCC"/>
+								<topPen lineColor="#CCCCCC"/>
+								<leftPen lineColor="#CCCCCC"/>
+								<bottomPen lineColor="#CCCCCC"/>
+								<rightPen lineColor="#CCCCCC"/>
+							</box>
+							<textField isBlankWhenNull="false">
+								<reportElement style="sous_titre4" x="0" y="0" width="93" height="33" isRemoveLineWhenBlank="true" isPrintInFirstWholeBand="true" forecolor="#FFFFFF" uuid="6bb8a254-e36c-4c45-8c3c-a52819fb6b88"/>
+								<box topPadding="0"/>
+								<textElement textAlignment="Center" verticalAlignment="Middle" rotation="None">
+									<font isBold="true"/>
+								</textElement>
+								<textFieldExpression><![CDATA[$V{culture}]]></textFieldExpression>
+							</textField>
+						</cellContents>
+					</crosstabColumnHeader>
+					<crosstabTotalColumnHeader>
+						<cellContents/>
+					</crosstabTotalColumnHeader>
+				</columnGroup>
+				<measure name="valeurMeasure" class="java.lang.Double" calculation="Sum">
+					<measureExpression><![CDATA[$F{valeur}]]></measureExpression>
+				</measure>
+				<crosstabCell width="93" height="17">
+					<cellContents mode="Opaque" style="CrossTab Valeur">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#CCCCCC"/>
+							<topPen lineColor="#CCCCCC"/>
+							<leftPen lineColor="#CCCCCC"/>
+							<bottomPen lineColor="#CCCCCC"/>
+							<rightPen lineColor="#CCCCCC"/>
+						</box>
+						<textField pattern="#,##0.0" isBlankWhenNull="false">
+							<reportElement style="CrossTab Valeur" stretchType="RelativeToTallestObject" mode="Opaque" x="0" y="0" width="93" height="17" uuid="895798ba-673e-423e-a775-2e8f96263406"/>
+							<box topPadding="0">
+								<pen lineWidth="0.0" lineColor="#CCCCCC"/>
+								<topPen lineWidth="0.0" lineColor="#CCCCCC"/>
+								<leftPen lineWidth="0.0" lineColor="#CCCCCC"/>
+								<bottomPen lineWidth="0.0" lineColor="#CCCCCC"/>
+								<rightPen lineWidth="0.0" lineColor="#CCCCCC"/>
+							</box>
+							<textElement verticalAlignment="Middle">
+								<font size="9"/>
+							</textElement>
+							<textFieldExpression><![CDATA[$V{valeurMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell height="25" rowTotalGroup="clef">
+					<cellContents backcolor="#BFE1FF" mode="Opaque" style="CrossTab Valeur">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField>
+							<reportElement x="0" y="0" width="50" height="25" uuid="bdeadce4-f7ad-4e28-9dbb-a3d85d0ee56b"/>
+							<textFieldExpression><![CDATA[$V{valeurMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell width="50" columnTotalGroup="culture">
+					<cellContents backcolor="#BFE1FF" mode="Opaque">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField>
+							<reportElement x="0" y="0" width="50" height="25" uuid="251911b5-7ddd-4c0e-b0e1-35b9edab082d"/>
+							<textFieldExpression><![CDATA[$V{valeurMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell rowTotalGroup="clef" columnTotalGroup="culture">
+					<cellContents backcolor="#BFE1FF" mode="Opaque">
+						<box>
+							<pen lineWidth="0.5" lineStyle="Solid" lineColor="#000000"/>
+						</box>
+						<textField>
+							<reportElement x="0" y="0" width="50" height="25" uuid="bd7c14b9-d44a-4f7a-848b-f327827affce"/>
+							<textFieldExpression><![CDATA[$V{valeurMeasure}]]></textFieldExpression>
+						</textField>
+					</cellContents>
+				</crosstabCell>
+				<crosstabCell rowTotalGroup="type">
+					<cellContents/>
+				</crosstabCell>
+				<crosstabCell rowTotalGroup="type" columnTotalGroup="culture">
+					<cellContents/>
+				</crosstabCell>
+			</crosstab>
+		</band>
+	</summary>
+</jasperReport>

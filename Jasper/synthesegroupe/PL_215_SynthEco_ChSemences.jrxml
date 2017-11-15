@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.2.0  -->
+<!-- 2017-11-15T16:19:10 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PL_Groupe_SynthEco_ChSemences" language="groovy" pageWidth="802" pageHeight="515" orientation="Landscape" columnWidth="802" leftMargin="0" rightMargin="0" topMargin="0" bottomMargin="0" uuid="c402a1e0-acdf-4e6c-b0f3-ec51dcba91fb">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.jasperserver.url" value="http://172.24.12.203:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.user" value="jasperadmin"/>
+	<property name="ireport.jasperserver.report.resource" value="/rapports_PL/analyses/PL_215_SynthEco_ChSemences"/>
+	<template><![CDATA["repo:/styles/PL_style_rapports"]]></template>
+	<style name="CrossTab Valeur" forecolor="#000000" backcolor="#FFFFFF" fill="Solid" hTextAlign="Center" hImageAlign="Center" vTextAlign="Middle" vImageAlign="Middle" isBold="false" isItalic="true" isUnderline="false" isStrikeThrough="false">
+		<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{clef}.split('#')[0]=="000"||$V{clef}.split('#')[0]=="001"||$V{clef}.split('#')[0]=="002"||$V{clef}.split('#')[0]=="005"||$V{clef}.split('#')[0]=="012"||$V{clef}.split('#')[0]=="013"||$V{clef}.split('#')[0]=="014")]]></conditionExpression>
+			<style mode="Opaque" forecolor="#004A1D" backcolor="#FFFFFF" fill="Solid" vTextAlign="Middle" vImageAlign="Middle" fontSize="10" isBold="true" isItalic="false">
+				<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+				<box>
+					<pen lineWidth="1.0" lineColor="#FEFEFE"/>
+					<topPen lineWidth="1.0" lineColor="#FEFEFE"/>
+					<leftPen lineWidth="1.0" lineColor="#FEFEFE"/>
+					<bottomPen lineWidth="1.0" lineColor="#FEFEFE"/>
+					<rightPen lineWidth="1.0" lineColor="#FEFEFE"/>
+				</box>
+			</style>
+		</conditionalStyle>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{clef}.split('#')[0]=="015"||$V{clef}.split('#')[0]=="016"||$V{clef}.split('#')[0]=="019"||$V{clef}.split('#')[0]=="020")]]></conditionExpression>
+			<style forecolor="#004A1D" backcolor="#95E466" fontSize="10" isBold="true" isItalic="false">
+				<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+			</style>
+		</conditionalStyle>
+	</style>
+	<style name="CrossTab Clef" style="CrossTab Valeur" mode="Opaque" fill="Solid" hTextAlign="Left" hImageAlign="Left" fontName="SansSerif" fontSize="10" isBold="false" isItalic="true" isUnderline="false" isStrikeThrough="false">
+		<box leftPadding="50">
+			<pen lineColor="#CCCCCC"/>
+			<topPen lineWidth="0.5" lineColor="#CCCCCC"/>
+			<leftPen lineWidth="0.5" lineColor="#CCCCCC"/>
+			<bottomPen lineWidth="0.5" lineColor="#CCCCCC"/>
+			<rightPen lineWidth="0.5" lineColor="#CCCCCC"/>
+		</box>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{clef}.split('#')[0]=="000"||$V{clef}.split('#')[0]=="001"||$V{clef}.split('#')[0]=="002"||$V{clef}.split('#')[0]=="005"||$V{clef}.split('#')[0]=="012"||$V{clef}.split('#')[0]=="013"||$V{clef}.split('#')[0]=="014")]]></conditionExpression>
+			<style mode="Opaque" forecolor="#004A1D" backcolor="#FFFFFF" fill="Solid" hTextAlign="Left" hImageAlign="Left" isBold="true" isItalic="false" isUnderline="false" isStrikeThrough="false">
+				<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+				<box leftPadding="4"/>
+			</style>
+		</conditionalStyle>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{clef}.split('#')[0]=="015"||$V{clef}.split('#')[0]=="016"||$V{clef}.split('#')[0]=="019"||$V{clef}.split('#')[0]=="020")]]></conditionExpression>
+			<style forecolor="#004A1D" backcolor="#95E466" fill="Solid" fontSize="10" isBold="true" isItalic="false">
+				<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+				<box leftPadding="4"/>
+			</style>
+		</conditionalStyle>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{clef}.split('#')[0]=="020")]]></conditionExpression>
+			<style fontSize="12">
+				<paragraph lineSpacing="Single" spacingBefore="6" spacingAfter="6"/>
+			</style>
+		</conditionalStyle>
+	</style>
+	<style name="CrossTab Type" forecolor="#004A1D" fontSize="11">
+		<pen lineWidth="0.5" lineColor="#CCCCCC"/>
+		<box leftPadding="4"/>
+		<conditionalStyle>
+			<conditionExpression><![CDATA[Boolean.valueOf($V{type}.split('#')[0]=="04")]]></conditionExpression>
+			<style mode="Transparent" fontSize="11">
+				<paragraph lineSpacing="1_1_2"/>
+			</style>
+		</conditionalStyle>
+	</style>
+	<parameter name="p_millesime" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[2013]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_exploitations" class="java.util.Collection"/>
+	<parameter name="schema_bdaplat_name" class="java.lang.String">
+		<defaultValueExpression><![CDATA["public"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FR_idutilisateur" class="java.lang.Integer"/>
+	<parameter name="p_cultures" class="java.util.List">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_moyen" class="java.lang.String"/>
+	<queryString>
+		<![CDATA[SELECT DISTINCT t1.libelletypeculture AS culture,
+unnest(array[
+'Charges semences (€/ha)'
+]) AS clef,
+unnest(array[
+'sum(ve.semences)/sum(ve.surface)'
+]) AS valeur
+
+FROM bdanalysegroupe.type_culture t1
+
+WHERE
+-- critere sur les cultures selectionnees
+$X{IN, CAST(t1.idtypeculture AS varchar), p_cultures}
+
+ORDER BY culture, clef]]>
+	</queryString>
+	<field name="culture" class="java.lang.String"/>
+	<field name="clef" class="java.lang.String"/>
+	<field name="valeur" class="java.lang.String"/>
+	<group name="gr_culture">
+		<groupExpression><![CDATA[$F{culture}]]></groupExpression>
+		<groupHeader>
+			<band/>
+		</groupHeader>
+		<groupFooter>
+			<band/>
+		</groupFooter>
+	</group>
+	<group name="clef" isStartNewPage="true">
+		<groupExpression><![CDATA[$F{clef}]]></groupExpression>
+		<groupHeader>
+			<band/>
+		</groupHeader>
+		<groupFooter>
+			<band height="515">
+				<subreport isUsingCache="false">
+					<reportElement x="0" y="0" width="802" height="515" uuid="59a6edfa-b6a3-4f5e-bf63-6a5f4efacd95"/>
+					<subreportParameter name="clef">
+						<subreportParameterExpression><![CDATA[$F{clef}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="p_exploitations">
+						<subreportParameterExpression><![CDATA[$P{p_exploitations}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="formule">
+						<subreportParameterExpression><![CDATA[$F{valeur}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="sub_culture">
+						<subreportParameterExpression><![CDATA[$F{culture}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="FR_idutilisateur">
+						<subreportParameterExpression><![CDATA[$P{FR_idutilisateur}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="p_millesime">
+						<subreportParameterExpression><![CDATA[$P{p_millesime}]]></subreportParameterExpression>
+					</subreportParameter>
+					<subreportParameter name="p_moyen">
+						<subreportParameterExpression><![CDATA[$P{p_moyen}]]></subreportParameterExpression>
+					</subreportParameter>
+					<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					<subreportExpression><![CDATA["repo:/rapports_PL/analyses/sub_PL_212_216_SynthEco"]]></subreportExpression>
+				</subreport>
+			</band>
+		</groupFooter>
+	</group>
+</jasperReport>

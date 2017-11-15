@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.2.0  -->
+<!-- 2017-11-15T16:20:59 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PL_Groupe_FertiPKEvolution" language="groovy" pageWidth="802" pageHeight="515" orientation="Landscape" columnWidth="802" leftMargin="0" rightMargin="0" topMargin="30" bottomMargin="20" uuid="2e7464a1-3253-4ea6-9af2-a78e5e4e3cd0">
+	<property name="ireport.zoom" value="1.0"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.jasperserver.url" value="http://172.24.12.203:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.user" value="jasperadmin"/>
+	<property name="ireport.jasperserver.report.resource" value="/rapports_PL/analyses/PL_236_FertiOrganique"/>
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="BDSOLDWH PROD"/>
+	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
+	<template><![CDATA["repo:/styles/PL_style_rapports"]]></template>
+	<parameter name="p_millesime" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[2013]]></defaultValueExpression>
+	</parameter>
+	<parameter name="schema_bdaplat_name" class="java.lang.String">
+		<defaultValueExpression><![CDATA["public"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FR_idutilisateur" class="java.lang.Integer"/>
+	<parameter name="p_cultures" class="java.util.List">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_exploitations" class="java.util.Collection"/>
+	<queryString>
+		<![CDATA[SELECT *
+FROM
+	(
+	SELECT	vp.millesime AS millesime,
+		t1.libelletypeculture AS culture,
+		'fertilisation N organique' AS type_ferti,
+		SUM(vp.norgrealise*vp.surface)/SUM(vp.surface) AS ferti_dose
+	FROM	bdanalysegroupe.vue_parcelles vp
+		-- jointure sur les types de cultures
+	LEFT JOIN (
+		SELECT	tcpt.*,ttc.codetypeculture,ttc.libelletypeculture FROM
+			bdanalysegroupe.cultures_par_type tcpt
+		JOIN	bdanalysegroupe.type_culture ttc ON (ttc.idtypeculture=tcpt.idtypeculture)
+		JOIN	bdanalysegroupe.tutilisateurs tu ON (tcpt.iddepartement=tu.identite)
+		WHERE	SUBSTRING(ttc.codetypeculture FROM 1 FOR 3) LIKE 'PL_'
+		AND	tu.idutilisateur=$P{FR_idutilisateur}
+	) t1 ON (t1.idculture=vp.idculture)
+	WHERE
+		-- critere sur le millesime
+		vp.millesime<=$P{p_millesime}
+	AND	$P{p_millesime} - 5 < vp.millesime
+		-- critere sur les exploitations selectionnees
+	AND	$X{IN, CAST(vp.idexploitation as varchar), p_exploitations}
+		-- critere sur les cultures selectionnees
+	AND	$X{IN, CAST(t1.idtypeculture AS varchar), p_cultures}
+		-- critere surface non nulle
+	AND	vp.surface>0
+		-- critere sur la fertilisation organique
+	AND	vp.norgrealise != 0
+	GROUP BY	vp.millesime , t1.libelletypeculture
+
+	UNION
+
+	SELECT	vp.millesime AS millesime,
+		t1.libelletypeculture AS culture,
+		'fertilisation N efficace organique' AS type_ferti,
+		SUM(vp.fertiorg_n*vp.surface)/SUM(vp.surface) AS ferti_dose
+	FROM	bdanalysegroupe.vue_parcelles vp
+		-- jointure sur les types de cultures
+	LEFT JOIN (
+		SELECT	tcpt.*,ttc.codetypeculture,ttc.libelletypeculture
+		FROM	bdanalysegroupe.cultures_par_type tcpt
+		JOIN	bdanalysegroupe.type_culture ttc ON (ttc.idtypeculture=tcpt.idtypeculture)
+		JOIN	bdanalysegroupe.tutilisateurs tu ON (tcpt.iddepartement=tu.identite)
+		WHERE	SUBSTRING(ttc.codetypeculture FROM 1 FOR 3) LIKE 'PL_'
+		AND	tu.idutilisateur=$P{FR_idutilisateur}
+		) t1 ON (t1.idculture=vp.idculture)
+	WHERE
+		-- critere sur le millesime
+		vp.millesime<=$P{p_millesime}
+	AND	$P{p_millesime} - 5 < vp.millesime
+		-- critere sur les exploitations selectionnees
+	AND	$X{IN, CAST(vp.idexploitation as varchar), p_exploitations}
+		-- critere sur les cultures selectionnees
+	AND	$X{IN, CAST(t1.idtypeculture AS varchar), p_cultures}
+		-- critere surface non nulle
+	AND	vp.surface>0
+		-- critere sur la fertilisation organique efficace
+	AND	vp.fertiorg_n != 0
+	GROUP BY	vp.millesime , t1.libelletypeculture
+	) AS req
+ORDER BY	culture,millesime,type_ferti DESC]]>
+	</queryString>
+	<field name="millesime" class="java.lang.Integer"/>
+	<field name="culture" class="java.lang.String"/>
+	<field name="type_ferti" class="java.lang.String"/>
+	<field name="ferti_dose" class="java.lang.Double"/>
+	<group name="gr_culture">
+		<groupExpression><![CDATA[$F{culture}]]></groupExpression>
+		<groupHeader>
+			<band height="40">
+				<textField>
+					<reportElement style="titre_edition" x="0" y="0" width="802" height="40" uuid="cd59ff23-2418-4a4c-8bed-2cc7138e78d8"/>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="none">
+						<font size="20" isBold="false"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Evolution de la fertilisation organique sur "+$F{culture}]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="425">
+				<barChart>
+					<chart>
+						<reportElement x="51" y="23" width="700" height="400" uuid="e8f7dcd9-bfbb-4eb1-8c5e-8becd5074d3f"/>
+						<chartTitle/>
+						<chartSubtitle/>
+						<chartLegend position="Right">
+							<font size="12"/>
+						</chartLegend>
+					</chart>
+					<categoryDataset>
+						<dataset resetType="Group" resetGroup="gr_culture"/>
+						<categorySeries>
+							<seriesExpression><![CDATA[$F{type_ferti}]]></seriesExpression>
+							<categoryExpression><![CDATA[$F{millesime}]]></categoryExpression>
+							<valueExpression><![CDATA[$F{ferti_dose}]]></valueExpression>
+						</categorySeries>
+					</categoryDataset>
+					<barPlot>
+						<plot>
+							<seriesColor seriesOrder="0" color="#6AAF23"/>
+							<seriesColor seriesOrder="1" color="#722EA5"/>
+							<seriesColor seriesOrder="2" color="#FFCCFF"/>
+						</plot>
+						<itemLabel/>
+						<categoryAxisFormat>
+							<axisFormat>
+								<labelFont>
+									<font size="12" isBold="true"/>
+								</labelFont>
+								<tickLabelFont>
+									<font size="12"/>
+								</tickLabelFont>
+							</axisFormat>
+						</categoryAxisFormat>
+						<valueAxisLabelExpression><![CDATA["Fertilisation organique (U/ha)"]]></valueAxisLabelExpression>
+						<valueAxisFormat>
+							<axisFormat>
+								<labelFont>
+									<font size="12" isBold="true"/>
+								</labelFont>
+							</axisFormat>
+						</valueAxisFormat>
+					</barPlot>
+				</barChart>
+			</band>
+		</groupFooter>
+	</group>
+</jasperReport>

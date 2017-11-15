@@ -1,0 +1,460 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.2.0  -->
+<!-- 2017-11-15T16:21:18 -->
+<jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PL_Global_CultureRdtCONV" language="groovy" pageWidth="802" pageHeight="515" orientation="Landscape" columnWidth="802" leftMargin="0" rightMargin="0" topMargin="30" bottomMargin="0" uuid="82bead8c-13a4-4b30-9ea2-19eb1225dc9b">
+	<property name="ireport.zoom" value="0.9090909090909091"/>
+	<property name="ireport.x" value="0"/>
+	<property name="ireport.y" value="0"/>
+	<property name="ireport.jasperserver.url" value="http://172.24.12.203:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.user" value="jasperadmin"/>
+	<property name="ireport.jasperserver.report.resource" value="/rapports_PL/analyses/PL_240_Culture_RdtBio"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w1" value="0"/>
+	<property name="com.jaspersoft.studio.data.sql.SQLQueryDesigner.sash.w2" value="1000"/>
+	<template><![CDATA["repo:/styles/PL_style_rapports"]]></template>
+	<parameter name="p_millesime" class="java.lang.Integer">
+		<defaultValueExpression><![CDATA[2013]]></defaultValueExpression>
+	</parameter>
+	<parameter name="schema_bdaplat_name" class="java.lang.String">
+		<defaultValueExpression><![CDATA["public"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="FR_idutilisateur" class="java.lang.Integer"/>
+	<parameter name="p_cultures" class="java.util.List">
+		<defaultValueExpression><![CDATA[]]></defaultValueExpression>
+	</parameter>
+	<parameter name="p_exploitations" class="java.util.Collection"/>
+	<queryString>
+		<![CDATA[SELECT	*,
+	sum_surf*100/SUM(sum_surf) OVER (PARTITION BY t1.idtypeculture) AS pourcent_surf
+FROM	(
+	SELECT
+		parc.iep_ilo_millesime AS millesime,
+		t1.libelletypeculture AS culture,
+		t1.idtypeculture,
+		-- Classes de rendement pour les différentes cultures
+		CASE
+		---- Blé tendre hiver BIO
+		WHEN (t1.libelletypeculture LIKE 'blé tendre hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 5 AND 15)
+			THEN '1#5-15 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'blé tendre hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 15 AND 25)
+			THEN '2#15-25 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'blé tendre hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 25 AND 35)
+			THEN '3#25-35 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'blé tendre hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 35 AND 45)
+			THEN '4#35-45 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'blé tendre hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 45 AND 55)
+			THEN '5#45-55 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'blé tendre hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 55 AND 65)
+			THEN '6#55-65 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'blé tendre hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 65 AND 80)
+			THEN '7#65-80 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'blé tendre hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 80 AND 120)
+			THEN '7#80-120 q/ha'
+		---- Colza hiver BIO
+		WHEN (t1.libelletypeculture LIKE 'colza hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 5 AND 10)
+			THEN '0#5-10 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'colza hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 10 AND 15)
+			THEN '1#10-25 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'colza hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 15 AND 20)
+			THEN '2#15-20 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'colza hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 20 AND 25)
+			THEN '3#20-25 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'colza hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 25 AND 30)
+			THEN '4#25-30 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'colza hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 30 AND 40)
+			THEN '5#30-40 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'colza hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 40 AND 55)
+			THEN '6#40-55 q/ha'
+		---- Maïs grain BIO
+		WHEN (t1.libelletypeculture LIKE 'maïs grain' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 5 AND 10)
+			THEN '1#5-10 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'maïs grain' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 10 AND 20)
+			THEN '2#10-20 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'maïs grain' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 20 AND 40)
+			THEN '3#20-40 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'maïs grain' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 40 AND 60)
+			THEN '4#40-60 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'maïs grain' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 60 AND 80)
+			THEN '5#60-80 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'maïs grain' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 80 AND 100)
+			THEN '6#80-100 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'maïs grain' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 100 AND 120)
+			THEN '7#100-120 q/ha'
+		---- Méteil grain BIO (regroupant deux sous cultures)
+		WHEN ((t1.idculture = 414 OR t1.idculture = 415) AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 0 AND 10)
+			THEN '1#0-10 q/ha'
+		WHEN ((t1.idculture = 414 OR t1.idculture = 415) AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 10 AND 20)
+			THEN '2#10-20 q/ha'
+		WHEN ((t1.idculture = 414 OR t1.idculture = 415) AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 20 AND 30)
+			THEN '3#20-30 q/ha'
+		---- Orge hiver BIO
+		WHEN (t1.libelletypeculture LIKE 'orge hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 5 AND 15)
+			THEN '0#5-15 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'orge hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 15 AND 25)
+			THEN '1#15-25 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'orge hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 25 AND 35)
+			THEN '2#25-35 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'orge hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 35 AND 45)
+			THEN '3#35-45 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'orge hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 45 AND 55)
+			THEN '4#45-55 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'orge hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 55 AND 65)
+			THEN '5#55-65 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'orge hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 65 AND 80)
+			THEN '6#65-80 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'orge hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 80 AND 120)
+			THEN '7#80-120 q/ha'
+		---- Protéagineux BIO
+			-- Féverole printemps BIO
+		WHEN (t1.libelletypeculture LIKE 'Féverole printemps' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 5 AND 10)
+			THEN '0#5-10 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Féverole printemps' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 10 AND 20)
+			THEN '1#10-20 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Féverole printemps' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 20 AND 30)
+			THEN '2#20-30 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Féverole printemps' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 30 AND 40)
+			THEN '3#30-40 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Féverole printemps' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 40 AND 55)
+			THEN '4#40-55 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Féverole printemps' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 55 AND 70)
+			THEN '5#55-70 q/ha'
+			-- Féverole hiver BIO
+		WHEN (t1.libelletypeculture LIKE 'Féverole hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 5 AND 10)
+			THEN '0#5-10 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Féverole hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 10 AND 20)
+			THEN '1#10-20 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Féverole hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 20 AND 30)
+			THEN '2#20-30 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Féverole hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 30 AND 40)
+			THEN '3#30-40 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Féverole hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 40 AND 55)
+			THEN '4#40-55 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Féverole hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 55 AND 70)
+			THEN '5#55-70 q/ha'
+			-- Pois printemps BIO
+		WHEN (t1.libelletypeculture LIKE 'Pois printemps' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 5 AND 10)
+			THEN '0#5-10 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Pois printemps' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 10 AND 20)
+			THEN '1#10-20 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Pois printemps' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 20 AND 30)
+			THEN '2#20-30 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Pois printemps' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 30 AND 40)
+			THEN '3#30-40 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Pois printemps' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 40 AND 55)
+			THEN '4#40-55 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Pois printemps' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 55 AND 70)
+			THEN '5#55-70 q/ha'
+			-- Pois hiver BIO
+		WHEN (t1.libelletypeculture LIKE 'Pois hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 5 AND 10)
+			THEN '0#5-10 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Pois hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 10 AND 20)
+			THEN '1#10-20 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Pois hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 20 AND 30)
+			THEN '2#20-30 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Pois hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 30 AND 40)
+			THEN '3#30-40 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Pois hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 40 AND 55)
+			THEN '4#40-55 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Pois hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 55 AND 70)
+			THEN '5#55-70 q/ha'
+			-- Lupins printemps BIO
+		WHEN (t1.libelletypeculture LIKE 'Lupins printemps' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 5 AND 10)
+			THEN '0#5-10 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Lupins printemps' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 10 AND 20)
+			THEN '1#10-20 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Lupins printemps' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 20 AND 30)
+			THEN '2#20-30 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Lupins printemps' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 30 AND 40)
+			THEN '3#30-40 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Lupins printemps' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 40 AND 55)
+			THEN '4#40-55 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Lupins printemps' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 55 AND 70)
+			THEN '5#55-70 q/ha'
+			-- Lupins hiver BIO
+		WHEN (t1.libelletypeculture LIKE 'Lupins hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 5 AND 10)
+			THEN '0#5-10 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Lupins hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 10 AND 20)
+			THEN '1#10-20 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Lupins hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 20 AND 30)
+			THEN '2#20-30 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Lupins hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 30 AND 40)
+			THEN '3#30-40 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Lupins hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 40 AND 55)
+			THEN '4#40-55 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'Lupins hiver' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 55 AND 70)
+			THEN '5#55-70 q/ha'
+		---- Tournesol BIO
+		WHEN (t1.libelletypeculture LIKE 'tournesol' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 5 AND 10)
+			THEN '1#5-10 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'tournesol' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 10 AND 20)
+			THEN '2#10-20 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'tournesol' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 20 AND 30)
+			THEN '3#20-30 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'tournesol' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 30 AND 40)
+			THEN '4#30-40 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'tournesol' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 40 AND 55)
+			THEN '5#40-55 q/ha'
+		---- Triticale BIO
+		WHEN (t1.libelletypeculture LIKE 'triticale' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 5 AND 15)
+			THEN '0#5-15 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'triticale' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 15 AND 25)
+			THEN '1#15-25 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'triticale' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 25 AND 35)
+			THEN '2#25-35 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'triticale' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 35 AND 45)
+			THEN '3#35-45 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'triticale' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 45 AND 55)
+			THEN '4#45-55 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'triticale' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 55 AND 65)
+			THEN '5#55-65 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'triticale' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 65 AND 80)
+			THEN '6#65-80 q/ha'
+		WHEN (t1.libelletypeculture LIKE 'triticale' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 80 AND 120)
+		THEN '7#80-120 q/ha'
+		---- Maïs fourrage BIO
+		WHEN (t1.libelletypeculture LIKE 'maïs fourrage' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 4 AND 8)
+			THEN '1#4-8 tMS/ha'
+		WHEN (t1.libelletypeculture LIKE 'maïs fourrage' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 8 AND 12)
+			THEN '2#8-12 tMS/ha'
+		WHEN (t1.libelletypeculture LIKE 'maïs fourrage' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 12 AND 16)
+			THEN '3#12-16 tMS/ha'
+		WHEN (t1.libelletypeculture LIKE 'maïs fourrage' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 16 AND 20)
+			THEN '4#16-20 tMS/ha'
+		WHEN (t1.libelletypeculture LIKE 'maïs fourrage' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 20 AND 24)
+			THEN '5#20-24 tMS/ha'
+		WHEN (t1.libelletypeculture LIKE 'maïs fourrage' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 14 AND 16)
+			THEN '6#14-16 tMS/ha'
+		WHEN (t1.libelletypeculture LIKE 'maïs fourrage' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 16 AND 20)
+			THEN '7#16-20 tMS/ha'
+		WHEN (t1.libelletypeculture LIKE 'maïs fourrage' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 20 AND 24)
+			THEN '8#20-24 tMS/ha'
+		---- Méteil fourrage BIO (regroupant deux sous cultures)
+		WHEN ((t1.idculture = 676 OR t1.idculture = 677) AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 0 AND 5)
+			THEN '1#0-5 tMS/ha'
+		WHEN ((t1.idculture = 676 OR t1.idculture = 677) AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 5 AND 15)
+			THEN '2#5-15 tMS/ha'
+		WHEN ((t1.idculture = 676 OR t1.idculture = 677) AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 15 AND 30)
+			THEN '3#15-30 tMS/ha'
+		WHEN ((t1.idculture = 676 OR t1.idculture = 677) AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 30 AND 45)
+			THEN '4#30-45 tMS/ha'
+		---- Prairies BIO
+		WHEN (t1.libelletypeculture LIKE 'prairies' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 2 AND 4)
+			THEN '1#2-4 tMS/ha'
+		WHEN (t1.libelletypeculture LIKE 'prairies' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 4 AND 8)
+			THEN '2#4-8 tMS/ha'
+		WHEN (t1.libelletypeculture LIKE 'prairies' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 8 AND 12)
+			THEN '3#8-12 tMS/ha'
+		WHEN (t1.libelletypeculture LIKE 'prairies' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 12 AND 16)
+			THEN '4#12-16 tMS/ha'
+		WHEN (t1.libelletypeculture LIKE 'prairies' AND COALESCE(parc.iep_par_rdtmoy,0) BETWEEN 16 AND 20)
+			THEN '5#16-20 tMS/ha'
+		-- Autre
+		ELSE NULL
+		END AS classe,
+		SUM(COALESCE(parc.iep_par_rdtmoy,0)*parc.iep_par_surf) AS sum_rec,
+		SUM(parc.iep_par_surf) AS sum_surf,
+		COUNT(parc.iep_idparcelleculturale) AS nb_parcelles
+
+	FROM	bdaplat.parcelles_$P!{p_millesime} parc
+		-- jointure sur la table des exploitations pour exp_statut et exp_depid
+	JOIN	bdaplat.texploitations expl ON (parc.iep_idexploitation = expl.idexploitation)
+		-- jointure sur les types de cultures
+		LEFT JOIN (
+		SELECT	tcpt.*,ttc.codetypeculture,ttc.libelletypeculture,tu.identite
+		FROM	bdanalysegroupe.cultures_par_type tcpt
+			JOIN bdanalysegroupe.type_culture ttc USING (idtypeculture)
+			JOIN bdanalysegroupe.tutilisateurs tu ON (tcpt.iddepartement=tu.identite)
+		WHERE	SUBSTRING(ttc.codetypeculture FROM 1 FOR 3) LIKE 'PL_'
+		AND	tu.idutilisateur=$P{FR_idutilisateur}
+		) t1 ON (t1.idculture=parc.iep_par_cultid)
+
+	WHERE
+		-- critere sur les exploitations reelles
+		expl.exp_statut IS NULL
+		-- critere sur le millesime
+	AND	parc.iep_ilo_millesime=$P{p_millesime}
+		-- critere sur les exploitations selectionnees
+	AND	$X{IN, CAST(parc.iep_idexploitation as varchar), p_exploitations}
+		-- critere sur les cultures selectionnees
+	AND	$X{IN, CAST(t1.idtypeculture AS varchar), p_cultures}
+		-- critere sur les cult bio
+	AND	parc.iep_par_bio = TRUE
+		-- criteres rdt non null et >0
+	AND	parc.iep_par_rdtmoy IS NOT NULL
+	AND	parc.iep_par_rdtmoy > 0
+		-- critere surface >0
+	AND	parc.iep_par_surf > 0
+	GROUP BY	millesime, culture,t1.idtypeculture,classe
+	) t1
+WHERE	classe IS NOT NULL
+ORDER BY	millesime,culture,t1.idtypeculture, classe]]>
+	</queryString>
+	<field name="millesime" class="java.lang.Integer"/>
+	<field name="culture" class="java.lang.String"/>
+	<field name="idtypeculture" class="java.lang.Integer"/>
+	<field name="classe" class="java.lang.String"/>
+	<field name="sum_rec" class="java.lang.Double"/>
+	<field name="sum_surf" class="java.lang.Double"/>
+	<field name="nb_parcelles" class="java.lang.Long"/>
+	<field name="pourcent_surf" class="java.lang.Double"/>
+	<variable name="total_parcelles" class="java.lang.Integer" resetType="Group" resetGroup="gr_culture" calculation="Sum">
+		<variableExpression><![CDATA[$F{nb_parcelles}]]></variableExpression>
+	</variable>
+	<variable name="total_surf" class="java.lang.Double" resetType="Group" resetGroup="gr_culture" calculation="Sum">
+		<variableExpression><![CDATA[$F{sum_surf}]]></variableExpression>
+	</variable>
+	<variable name="som_rec" class="java.lang.Float" resetType="Group" resetGroup="gr_culture" calculation="Sum">
+		<variableExpression><![CDATA[$F{sum_rec}]]></variableExpression>
+	</variable>
+	<variable name="Ymax" class="java.lang.Float" resetType="Group" resetGroup="gr_culture" calculation="Highest">
+		<variableExpression><![CDATA[$F{pourcent_surf}]]></variableExpression>
+	</variable>
+	<group name="gr_culture">
+		<groupExpression><![CDATA[$F{culture}]]></groupExpression>
+		<groupHeader>
+			<band height="60">
+				<textField>
+					<reportElement style="titre_edition" x="0" y="0" width="802" height="30" uuid="2f6c5459-6de0-4366-91e0-d22016c887ad"/>
+					<textElement textAlignment="Center" verticalAlignment="Top" markup="none">
+						<font size="20" isBold="false"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Répartition de la surface en "+$F{culture}+" par classe de rendement"]]></textFieldExpression>
+				</textField>
+				<staticText>
+					<reportElement x="101" y="30" width="614" height="30" uuid="5cbf9f4f-1716-4521-a3c4-6250667403dd"/>
+					<textElement textAlignment="Center">
+						<font size="18"/>
+					</textElement>
+					<text><![CDATA[Culture biologique - Echelle du groupe d'exploitations]]></text>
+				</staticText>
+			</band>
+		</groupHeader>
+		<groupFooter>
+			<band height="425">
+				<multiAxisChart>
+					<chart isShowLegend="false">
+						<reportElement x="28" y="80" width="746" height="345" isPrintWhenDetailOverflows="true" uuid="764bde4a-d3a6-47c2-b2f9-06b78d8b59db"/>
+						<box>
+							<pen lineColor="#999999"/>
+							<topPen lineWidth="0.0" lineColor="#999999"/>
+							<leftPen lineWidth="0.0" lineColor="#999999"/>
+							<bottomPen lineWidth="0.0" lineColor="#999999"/>
+							<rightPen lineWidth="0.0" lineColor="#999999"/>
+						</box>
+						<chartTitle/>
+						<chartSubtitle/>
+						<chartLegend position="Right">
+							<font size="12"/>
+						</chartLegend>
+					</chart>
+					<multiAxisPlot>
+						<plot/>
+						<axis position="leftOrTop">
+							<barChart>
+								<chart isShowLegend="false">
+									<reportElement x="0" y="0" width="0" height="0" forecolor="#009139" backcolor="#FFFFFF" uuid="52744f36-cb0d-4e42-9321-78b1afc65b8a"/>
+									<chartTitle color="#000000"/>
+									<chartSubtitle color="#000000"/>
+									<chartLegend textColor="#000000" backgroundColor="#FFFFFF" position="Right">
+										<font size="12"/>
+									</chartLegend>
+								</chart>
+								<categoryDataset>
+									<dataset resetType="Group" resetGroup="gr_culture"/>
+									<categorySeries>
+										<seriesExpression><![CDATA[$F{millesime}]]></seriesExpression>
+										<categoryExpression><![CDATA[$F{classe}.split('#')[1]]]></categoryExpression>
+										<valueExpression><![CDATA[$F{pourcent_surf}]]></valueExpression>
+										<labelExpression><![CDATA[Math.round($F{pourcent_surf})+"%"]]></labelExpression>
+									</categorySeries>
+								</categoryDataset>
+								<barPlot isShowLabels="true" isShowTickLabels="true" isShowTickMarks="true">
+									<plot labelRotation="-30.0">
+										<seriesColor seriesOrder="0" color="#009139"/>
+										<seriesColor seriesOrder="1" color="#4F81BD"/>
+										<seriesColor seriesOrder="2" color="#C0504D"/>
+									</plot>
+									<itemLabel/>
+									<categoryAxisFormat labelRotation="-30.0">
+										<axisFormat labelColor="#333333" tickLabelColor="#000000" axisLineColor="#000000">
+											<tickLabelFont>
+												<font size="12"/>
+											</tickLabelFont>
+										</axisFormat>
+									</categoryAxisFormat>
+									<valueAxisLabelExpression><![CDATA["Proportion de la surface cultivée (%)"]]></valueAxisLabelExpression>
+									<valueAxisFormat>
+										<axisFormat labelColor="#009139" tickLabelColor="#009139" verticalTickLabels="false" axisLineColor="#009139">
+											<labelFont>
+												<font size="12" isBold="true"/>
+											</labelFont>
+											<tickLabelFont>
+												<font size="8"/>
+											</tickLabelFont>
+										</axisFormat>
+									</valueAxisFormat>
+									<rangeAxisMaxValueExpression><![CDATA[$V{Ymax}.intValue()+3]]></rangeAxisMaxValueExpression>
+								</barPlot>
+							</barChart>
+						</axis>
+					</multiAxisPlot>
+				</multiAxisChart>
+				<textField pattern="###0 parcelle(s)">
+					<reportElement style="texte_defaut" isPrintRepeatedValues="false" x="574" y="20" width="200" height="20" uuid="e5ef4315-71ea-45be-b65e-b0061851fd1c"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<pen lineStyle="Double" lineColor="#009F49"/>
+						<topPen lineWidth="0.0" lineStyle="Double" lineColor="#009F49"/>
+						<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineWidth="0.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{total_parcelles}]]></textFieldExpression>
+				</textField>
+				<textField pattern="#,##0 ha">
+					<reportElement style="texte_defaut" isPrintRepeatedValues="false" x="574" y="40" width="200" height="20" uuid="a82787e6-1303-4508-ad15-d6b08fdff6a7"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<pen lineStyle="Double" lineColor="#009F49"/>
+						<topPen lineWidth="0.0" lineStyle="Double" lineColor="#009F49"/>
+						<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineWidth="0.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA[$V{total_surf}]]></textFieldExpression>
+				</textField>
+				<textField pattern="">
+					<reportElement style="texte_defaut" isPrintRepeatedValues="false" x="574" y="60" width="200" height="20" uuid="8fab2540-7242-4b82-a38e-72566a524bd2"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<pen lineStyle="Solid" lineColor="#009F49"/>
+						<topPen lineWidth="0.0" lineStyle="Solid" lineColor="#009F49"/>
+						<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement textAlignment="Right" verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Rendement moyen "+Math.round($V{som_rec}/$V{total_surf})+($F{idtypeculture}<2000?" (q/ha)":" (tMS/ha)")]]></textFieldExpression>
+				</textField>
+				<textField evaluationTime="Group" evaluationGroup="gr_culture" pattern="###0 parcelle(s)">
+					<reportElement style="texte_defaut" isPrintRepeatedValues="false" x="574" y="0" width="200" height="20" uuid="a8960e92-60b9-439e-83bc-b3e4f62b43f6"/>
+					<box topPadding="2" leftPadding="2" bottomPadding="2" rightPadding="2">
+						<pen lineStyle="Double" lineColor="#009F49"/>
+						<topPen lineWidth="2.0" lineStyle="Double" lineColor="#009F49"/>
+						<leftPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<bottomPen lineWidth="1.0" lineStyle="Double" lineColor="#5BBF21"/>
+						<rightPen lineWidth="2.0" lineStyle="Double" lineColor="#5BBF21"/>
+					</box>
+					<textElement textAlignment="Center" verticalAlignment="Middle">
+						<font size="12"/>
+					</textElement>
+					<textFieldExpression><![CDATA["Echantillon"]]></textFieldExpression>
+				</textField>
+			</band>
+		</groupFooter>
+	</group>
+</jasperReport>
