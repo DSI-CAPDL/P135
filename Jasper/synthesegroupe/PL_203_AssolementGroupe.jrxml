@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.2.0  -->
-<!-- 2017-11-15T16:17:52 -->
+<!-- Created with Jaspersoft Studio version 6.3.1.final using JasperReports Library version 6.3.1  -->
+<!-- 2017-11-16T11:30:13 -->
 <jasperReport xmlns="http://jasperreports.sourceforge.net/jasperreports" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://jasperreports.sourceforge.net/jasperreports http://jasperreports.sourceforge.net/xsd/jasperreport.xsd" name="PL Global : AssolementAn" language="groovy" pageWidth="802" pageHeight="515" orientation="Landscape" columnWidth="802" leftMargin="0" rightMargin="0" topMargin="30" bottomMargin="20" uuid="8bcbeafb-6e47-4602-b4b2-8eb8e33ef34d">
 	<property name="ireport.zoom" value="1.0"/>
 	<property name="ireport.x" value="0"/>
 	<property name="ireport.y" value="0"/>
-	<property name="ireport.jasperserver.url" value="http://172.24.12.203:8080/jasperserver/"/>
+	<property name="ireport.jasperserver.url" value="http://172.24.12.205:8080/jasperserver/"/>
 	<property name="ireport.jasperserver.user" value="jasperadmin"/>
 	<property name="ireport.jasperserver.report.resource" value="/rapports_PL/analyses/PL_203_AssolementGroupe"/>
 	<property name="com.jaspersoft.studio.data.sql.tables" value=""/>
@@ -60,7 +60,12 @@ WHERE
 	--t1.libelletypeculture IS NOT NULL
 --AND	-- critere exploitation réelle
 	expl.exp_statut IS NULL
-AND	$X{IN, CAST(idexploitation as varchar), p_exploitations}
+AND 	CASE
+        WHEN $X{NOTIN, '-1', p_exploitations} THEN
+            $X{IN, CAST(pi.ilo_idexploitation as varchar), p_exploitations}
+		ELSE
+          true
+        END
 and iep_par_cultid is not null
 and iep_par_cultprincipale is true 
 GROUP BY --iep_par_cultid ,iep_par_cultlibusage,iep_par_cultcoderpg,
@@ -98,7 +103,12 @@ WHERE
 	t1.libelletypeculture IS NOT NULL
 AND	-- critere exploitation réelle
 	expl.exp_statut IS NULL
-AND	$X{IN, CAST(idexploitation as varchar), p_exploitations}
+AND 	CASE
+        WHEN $X{NOTIN, '-1', p_exploitations} THEN
+            $X{IN, CAST(pi.ilo_idexploitation as varchar), p_exploitations}
+		ELSE
+          true
+        END
 and iep_par_cultid is not null
 and iep_par_cultprincipale is true 
 GROUP BY culture
